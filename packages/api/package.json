@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@arascan/components": "^1.0.0",
-    "@types/mongodb": "^3.6.8",
+    "@types/mongodb": "^3.6.9",
     "@polkadot/api": "^3.11.1",
     "compression": "^1.7.4",
     "dotenv": "^8.2.0",
