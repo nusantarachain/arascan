@@ -100,7 +100,11 @@ function processStakingEvent(ctx: Context, method: string, event: any, eventIdx:
 
 const eventProcessorClass: any = {
     'system': async (ctx: Context, method: string, event: any, eventIdx: number, block: Block, blockTs: number, extrIdx: number) => {
-        systemEventProcessorClass[method](ctx, event, eventIdx, block, blockTs, extrIdx)
+        if (systemEventProcessorClass[method]){
+            systemEventProcessorClass[method](ctx, event, eventIdx, block, blockTs, extrIdx)
+        }else{
+            console.log(`Unhandled event: system.${method}`);
+        }
     },
     'staking': processStakingEvent,
 };
