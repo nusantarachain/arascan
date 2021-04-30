@@ -9,8 +9,8 @@ services:
     image: 'mvertes/alpine-mongo'
     ports:
       - '27017:27017'
-    volumes:
-      - './dbdata:/data/db'
+    # volumes:
+    #   - './dbdata:/data/db'
     networks:
       - app-tier
   
@@ -20,9 +20,10 @@ services:
       - '9933:9933'
       - '9944:9944'
       - '30333:30333'
-    volumes:
-      - '/tmp/nuchain-testnet:/data'
-    command: 'nuchain --base-path=/data --rpc-cors="*" --chain=testnet --bootnodes=/ip4/119.81.4.212/tcp/30334/p2p/12D3KooWK6urQQdUbyzu12R89pdE1TkQgPx1FaMHFXhkxfh84wgy  --pruning=archive --rpc-external --ws-external --rpc-methods=Unsafe'
+    # volumes:
+    #   - '/tmp/nuchain-testnet:/data'
+    # command: 'nuchain --base-path=/data --rpc-cors="*" --chain=testnet --bootnodes=/ip4/103.20.197.200/tcp/30334/p2p/12D3KooWKdzrF2aY7ZofjsPS65qBFZm2Xgr2VT3VS8u2ECq24TVw  --pruning=archive --rpc-external --ws-external --rpc-methods=Unsafe'
+    command: 'nuchain --base-path=/data --rpc-cors="*" --dev --rpc-external --ws-external --rpc-methods=Unsafe'
     networks:
       - app-tier
 
