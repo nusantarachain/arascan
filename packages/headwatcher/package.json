@@ -10,13 +10,13 @@
   "dependencies": {
     "@arascan/components": "^1.0.0",
     "@polkadot/api": "^3.11.1",
-    "@types/mongodb": "^3.6.10",
+    "@types/mongodb": "^3.6.12",
     "compression": "^1.7.4",
     "dotenv": "^8.2.0",
-    "mongodb": "^3.6.5"
+    "mongodb": "^3.6.6"
   },
   "devDependencies": {
-    "@types/node": "^12.20.7"
+    "@types/node": "^12.20.10"
   },
   "files": [
     "dist",
