@@ -326,7 +326,7 @@ async function processBlock(
   // process events
   const allEvents = await api.query.system.events.at(hash);
 
-  const colTrf = db.collection('transfers');
+  // const colTrf = db.collection('transfers');
   const colBlocks = db.collection('blocks');
   const colEvents = db.collection('events');
 
@@ -348,7 +348,7 @@ async function processBlock(
         method: { callIndex, args },
       } = extr;
 
-      const extrIndex = `${blockNumber}-${extrIdx}`;
+      // const extrIndex = `${blockNumber}-${extrIdx}`;
 
       allEvents
         .filter(
@@ -398,33 +398,34 @@ async function processBlock(
         console.log(`\n${extr}`);
         console.log(`[${blockNumber}] ${section}/${method}: ${signer} -> ${args[0]} amount: ${args[1]}`);
 
-        const query = {
-          src: `${signer}`,
-          nonce: extr.nonce.toNumber(),
-        };
+        // const query = {
+        //   src: `${signer}`,
+        //   nonce: extr.nonce.toNumber(),
+        // };
 
-        let result = await colTrf.updateOne(
-          query,
-          {
-            $set: {
-              src: `${signer}`,
-              nonce: extr.nonce.toNumber(),
-              block: blockNumber,
-              extrinsic_index: extrIndex,
-              dst: `${args[0]}`,
-              amount: `${args[1]}`,
-            },
-          },
-          { upsert: true }
-        );
+        // let result = await colTrf.updateOne(
+        //   query,
+        //   {
+        //     $set: {
+        //       src: `${signer}`,
+        //       nonce: extr.nonce.toNumber(),
+        //       block: blockNumber,
+        //       extrinsic_index: extrIndex,
+        //       dst: `${args[0]}`,
+        //       amount: `${args[1]}`,
+        //     },
+        //   },
+        //   { upsert: true }
+        // );
 
-        // If nothing has changed, don't do further processing.
-        if (result.upsertedCount == 0 && result.modifiedCount == 0) {
-          return [];
-        }
+        // // If nothing has changed, don't do further processing.
+        // if (result.upsertedCount == 0 && result.modifiedCount == 0) {
+        //   return [];
+        // }
 
-        const obj = await colTrf.findOne(query);
-        return [{ trait: 'target', section, method, id: obj._id, nonce: extr.nonce.toNumber() }];
+        // const obj = await colTrf.findOne(query);
+        // return [{ trait: 'target', section, method, id: obj._id, nonce: extr.nonce.toNumber() }];
+        return [];
       } else if (section == 'identity') {
         return [{ trait: 'target', section, method, extr }];
       } else if (section == 'timestamp') {
