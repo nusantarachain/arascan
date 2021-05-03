@@ -19,7 +19,7 @@
     "mongodb": "^3.6.6"
   },
   "devDependencies": {
-    "@types/node": "^12.20.10"
+    "@types/node": "^12.20.11"
   },
   "files": [
     "dist",
