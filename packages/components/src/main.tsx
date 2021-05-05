@@ -12,28 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiPromise } from '@polkadot/api';
-import { hexToString, isHex, isU8a, u8aToHex } from '@polkadot/util';
+// import type { ApiPromise } from '@polkadot/api';
+import { isHex, isU8a, u8aToHex } from '@polkadot/util';
 import type { Block, Hash } from '@polkadot/types/interfaces';
+import { Context } from './context';
+import { eventHandler } from './event_handler';
 
-import type { MongoClient, Db } from 'mongodb';
+import type { Db } from 'mongodb';
 
 // const _ = require('lodash');
 const crc32 = require('crc32');
-
-class Context {
-  api!: ApiPromise;
-  db!: Db;
-  client!: MongoClient;
-  currentBlock: any;
-  currentBlockNumber: number = 0;
-
-  constructor(api: ApiPromise, db: Db, client: MongoClient) {
-    this.db = db;
-    this.client = client;
-    this.api = api;
-  }
-}
 
 // const metaClassMap: any = {
 //   balances: {
@@ -132,174 +120,12 @@ const eventProcessorClass: any = {
   staking: processStakingEvent,
 };
 
-const eventPostProcess: any = {
-  'system.NewAccount': async (ctx: Context, _block: Block, event: any, extrs: [any]) => {
-    const accountId = event.data[0].toHuman();
-    await ctx.db
-      .collection('accounts')
-      .updateOne({ _id: accountId }, { $set: { created_ts: getTimestampFromExtrinsics(extrs) } }, { upsert: true });
-  },
-  'balances.Transfer': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
-    const accountId1 = event.data[0].toHuman();
-    const accountId2 = event.data[1].toHuman();
-    updateTransfer(ctx, accountId1, accountId2, event.data[2].toNumber(), extrs);
-    await updateAccount(ctx, accountId1);
-    await updateAccount(ctx, accountId2);
-  },
-  'identity.IdentitySet': async (ctx: Context, _block: Block, event: any, _extrs: any[]) => {
-    const accountId = event.data[0].toHuman();
-    await updateAccount(ctx, accountId, new UpdateOptions().setIdentity(true));
-  },
-  'organization.OrganizationAdded': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
-    const orgId = event.data[0].toHuman();
-    await updateOrganization(ctx, orgId, extrs);
-  },
-  'organization.OrganizationUpdated': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
-    const orgId = event.data[0].toHuman();
-    await updateOrganization(ctx, orgId, extrs);
-  },
-  'organization.OrganizationSuspended': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
-    const orgId = event.data[0].toHuman();
-    await updateOrganization(ctx, orgId, extrs);
-  },
-  'organization.AdminChanged': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
-    const orgId = event.data[0].toHuman();
-    await updateOrganization(ctx, orgId, extrs);
-  },
-};
-
-async function updateOrganization(ctx: Context, orgId: string, extrs: any[]) {
-  const org = await (ctx.api.query as any).organization.organizations(orgId);
-  console.log('Processing org:', org.toHuman());
-  await ctx.db
-    .collection('organizations')
-    .updateOne(
-      { _id: orgId },
-      { $set: { ...org.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs) } }
-    , { upsert: true });
-}
-
-function getTimestampFromExtrinsics(extrs: any[]) {
-  return extrs
-    .filter((a) => a.method.section == 'timestamp' && a.method.method == 'set')
-    .map((a) => a.args[0].toNumber())
-    .pop();
-}
-
-function updateTransfer(ctx: Context, src: string, dst: string, amount: number, extrs: any[]) {
-  const timestamp = getTimestampFromExtrinsics(extrs);
-  const nonce = extrs[1]?.nonce.toNumber();
-  if (nonce != null && nonce != undefined) {
-    console.log(src, dst, amount, timestamp, nonce);
-
-    const query = {
-      src: src,
-      nonce: nonce,
-    };
-
-    ctx.db.collection('transfers').updateOne(
-      query,
-      {
-        $set: {
-          src: src,
-          nonce: nonce,
-          block: ctx.currentBlockNumber,
-          extrinsic_index: 1,
-          dst: dst,
-          amount: `${amount}`,
-          ts: timestamp,
-        },
-      },
-      { upsert: true }
-    );
-  }
-}
-
 function toHex(d: any) {
   return Buffer.from(d).toString('hex');
 }
 
 function toNumber(d: any) {
   return parseInt(d) || 0;
-}
-
-class UpdateOptions {
-  identity: boolean;
-
-  constructor(identity: boolean = false) {
-    this.identity = identity;
-  }
-
-  static default(): UpdateOptions {
-    return new UpdateOptions();
-  }
-
-  setIdentity(identity: boolean) {
-    this.identity = identity;
-    return this;
-  }
-}
-
-async function updateAccount(ctx: Context, accountId: string, opts: UpdateOptions = UpdateOptions.default()) {
-  const bal = await ctx.api.query.system.account(accountId);
-  await ctx.db
-    .collection('accounts')
-    .updateOne({ _id: accountId }, { $set: { balance: bal.data.toJSON() } }, { upsert: true });
-
-  // update identity
-  if (opts.identity) {
-    const rv = await ctx.api.query.identity.identityOf(accountId);
-    if (rv.isSome) {
-      const identity = rv.unwrap();
-      const ident: any = {};
-      if (identity.info.display.isRaw) {
-        ident['display'] = hexToString(identity.info.display.asRaw.toHex());
-      }
-      if (identity.info.legal.isRaw) {
-        ident['legal'] = hexToString(identity.info.legal.asRaw.toHex());
-      }
-      if (identity.info.web.isRaw) {
-        ident['web'] = hexToString(identity.info.web.asRaw.toHex());
-      }
-      if (identity.info.email.isRaw) {
-        ident['email'] = hexToString(identity.info.email.asRaw.toHex());
-      }
-      if (identity.info.twitter.isRaw) {
-        ident['twitter'] = hexToString(identity.info.twitter.asRaw.toHex());
-      }
-      if (identity.info.image.isRaw) {
-        ident['image'] = hexToString(identity.info.image.asRaw.toHex());
-      }
-      await ctx.db
-        .collection('accounts')
-        .updateOne({ _id: accountId }, { $set: { identity: ident } }, { upsert: true });
-    }
-  }
-}
-
-async function updateStats(ctx: Context) {
-  const { api, db } = ctx;
-
-  const era = (await api.query.staking.currentEra()).unwrap().toNumber();
-  const session = (await api.query.session.currentIndex()).toNumber();
-  const validators = (await api.query.session.validators()).map((a) => a.toHuman());
-  const finalizedBlockHead = await api.rpc.chain
-    .getFinalizedHead()
-    .then((blockHash) => api.rpc.chain.getBlock(blockHash));
-  const finalizedBlockCount = finalizedBlockHead.block.header.number.toNumber();
-
-  db.collection('metadata').updateOne(
-    { _id: 'stats' },
-    {
-      $set: {
-        era,
-        session,
-        validators,
-        finalizedBlockCount,
-      },
-    },
-    { upsert: true }
-  );
 }
 
 async function processBlock(
@@ -417,8 +243,8 @@ async function processBlock(
     allEvents.map(async ({ event }) => {
       let key = `${event.section}.${event.method}`;
       let processed = false;
-      if (eventPostProcess[key]) {
-        await eventPostProcess[key](ctx, block, event, extrinsics);
+      if (eventHandler[key]) {
+        await eventHandler[key](ctx, block, event, extrinsics);
         processed = true;
       }
       if (!processed && key != 'system.ExtrinsicSuccess') {
@@ -453,6 +279,7 @@ async function getLastBlock(db: Db) {
 }
 
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
+import { updateAccount, updateStats } from './event_handler';
 
 export {
   processBlock,
