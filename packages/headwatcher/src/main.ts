@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise } from '@polkadot/api';
+// import { ApiPromise } from '@polkadot/api';
+import { Nuchain } from '@arascan/components';
 import { MongoClient } from 'mongodb';
 import { Context, processBlock, updateStats } from '@arascan/components';
 
@@ -21,16 +22,7 @@ require('dotenv').config();
 async function main() {
     const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 
-    const api = await ApiPromise.create({
-        types: {
-            Address: 'MultiAddress',
-            LookupSource: 'MultiAddress'
-        }
-    });
-
-    // const validators = await api.query.staking.validators.keys();
-
-    // console.log(`${validators}`);
+    const api = await Nuchain.connectApi();
 
     const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
         MongoClient.connect(dbUri, async (err, client: MongoClient) => {

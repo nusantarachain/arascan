@@ -14,7 +14,7 @@
 
 import { MongoClient, Db } from 'mongodb';
 import { isHex, toNumber } from '@arascan/components';
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import { WsProvider } from '@polkadot/api';
 
 const restify = require('restify');
 
@@ -344,13 +344,10 @@ const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944'
 
 console.log(`Using WS socket address: ${WS_SOCKET_URL}`);
 
-ApiPromise.create({
-  provider: new WsProvider(WS_SOCKET_URL),
-  types: {
-    Address: 'MultiAddress',
-    LookupSource: 'MultiAddress',
-  },
-}).then((api) => {
+import { Nuchain } from "@arascan/components";
+
+Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)})
+.then((api) => {
   api.rpc.chain.subscribeNewHeads(async (head: any) => {
     const blockHash = await api.rpc.chain.getBlockHash(head.number);
 
