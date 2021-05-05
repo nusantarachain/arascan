@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// import type { ApiPromise } from '@polkadot/api';
 import { isHex, isU8a, u8aToHex } from '@polkadot/util';
 import type { Block, Hash } from '@polkadot/types/interfaces';
 import { Context } from './context';

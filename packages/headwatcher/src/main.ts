@@ -24,6 +24,14 @@ async function main() {
 
     const api = await Nuchain.connectApi({});
 
+    // const api = await ApiPromise.create({
+    //     // provider: new WsProvider(WS_SOCKET_URL),
+    //     types: {
+    //         Address: 'MultiAddress',
+    //         LookupSource: 'MultiAddress'
+    //     }
+    // });
+
     const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
         MongoClient.connect(dbUri, async (err, client: MongoClient) => {
             if (err == null) {
@@ -44,6 +52,7 @@ async function main() {
     process.on('SIGINT', (_code) => {
         console.log("quiting...");
         unsub();
+        process.exit(0);
     });
 }
 

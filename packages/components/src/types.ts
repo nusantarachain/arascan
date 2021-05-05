@@ -2,6 +2,12 @@ export default {
   Address: "MultiAddress",
   LookupSource: "MultiAddress",
   OrgId: "AccountId",
+  PropName: "Vec<u8>",
+  PropValue: "Vec<u8>",
+  Property: {
+    name: "PropName",
+    value: "PropValue"
+  },
   Organization: {
     id: "AccountId",
     name: "Vec<u8>",
@@ -28,12 +34,6 @@ export default {
     expired: "Option<Moment>",
     revoked: "bool",
     props: "Option<Vec<Property>>"
-  },
-  PropName: "Vec<u8>",
-  PropValue: "Vec<u8>",
-  Property: {
-    name: "PropName",
-    value: "PropValue"
   },
   ProductId: "Vec<u8>",
   Product: {
@@ -68,7 +68,8 @@ export default {
     location: "Option<ReadPoint>",
     readings: "Vec<Reading<Moment>>",
     status: "TrackingStatus",
-    timestamp: "Moment"
+    timestamp: "Moment",
+    props: "Option<Vec<Property>>"
   },
   ReadPoint: {
     latitude: "Decimal",

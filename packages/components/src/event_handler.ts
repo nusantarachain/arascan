@@ -2,6 +2,12 @@ import type { Context } from './context';
 import type { Block } from '@polkadot/types/interfaces';
 import { hexToString } from '@polkadot/util';
 
+const cols = {
+  PRODUCT_TRACKING: 'product_tracking',
+  PRODUCT_TRACKING_EVENT: 'product_tracking_event',
+  PRODUCTS: 'products',
+};
+
 const eventHandler: any = {
   'system.NewAccount': async (ctx: Context, _block: Block, event: any, extrs: [any]) => {
     const accountId = event.data[0].toHuman();
@@ -48,25 +54,54 @@ const eventHandler: any = {
   },
   'productTracking.TrackingStatusUpdated': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
     const trackingId = event.data[1].toHuman();
-    await updateProductTracking(ctx, trackingId, extrs);
+    const eventIdx = event.data[2].toNumber();
+    await updateProductTrackingStatus(ctx, trackingId, eventIdx, extrs);
   },
 };
 
+async function updateProductTrackingStatus(ctx: Context, trackingId: string, eventIdx: number, _extrs: any[]) {
+  const _tracking = await (ctx.api.query as any).productTracking.tracking(trackingId);
+  if (!_tracking) {
+    return;
+  }
+  const trackingEvent = await (ctx.api.query as any).productTracking.allEvents(eventIdx);
+  if (!trackingEvent) {
+    return;
+  }
+  console.log('update product tracking:', trackingId);
+  console.log(_tracking.toHuman());
+  console.log('event:', eventIdx);
+  console.log(trackingEvent.toHuman());
+  const tracking = _tracking.toJSON();
+  await ctx.db
+    .collection(cols.PRODUCT_TRACKING)
+    .updateOne(
+      { _id: trackingId },
+      { $set: { status: tracking.status, updated: tracking.updated } },
+      { upsert: true }
+    );
+  await ctx.db
+    .collection(cols.PRODUCT_TRACKING_EVENT)
+    .updateOne(
+      { _id: eventIdx },
+      { $set: { ...trackingEvent.toJSON(), created_at_block: ctx.currentBlockNumber } },
+      { upsert: true }
+    );
+}
+
 async function updateProductTracking(ctx: Context, trackingId: string, extrs: any[]) {
-  const tracking = (ctx.api.query as any).productTracking.tracking(trackingId);
+  const tracking = await (ctx.api.query as any).productTracking.tracking(trackingId);
   if (!tracking) {
     return;
   }
-  console.log("Processing product tracking:", tracking);
-  await ctx.db
-    .collection('product_tracking')
-    .updateOne(
-      { _id: trackingId },
-      {
-        $set: { ...tracking.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs) },
-      },
-      { upsert: true }
-    );
+  console.log('Processing product tracking:', tracking.toHuman());
+  await ctx.db.collection(cols.PRODUCT_TRACKING).updateOne(
+    { _id: trackingId },
+    {
+      $set: { ...tracking.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs) },
+    },
+    { upsert: true }
+  );
 }
 
 async function getOrganization(ctx: Context, orgId: string) {
