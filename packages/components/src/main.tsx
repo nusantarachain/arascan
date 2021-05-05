@@ -150,7 +150,34 @@ const eventPostProcess: any = {
     const accountId = event.data[0].toHuman();
     await updateAccount(ctx, accountId, new UpdateOptions().setIdentity(true));
   },
+  'organization.OrganizationAdded': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
+    const orgId = event.data[0].toHuman();
+    await updateOrganization(ctx, orgId, extrs);
+  },
+  'organization.OrganizationUpdated': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
+    const orgId = event.data[0].toHuman();
+    await updateOrganization(ctx, orgId, extrs);
+  },
+  'organization.OrganizationSuspended': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
+    const orgId = event.data[0].toHuman();
+    await updateOrganization(ctx, orgId, extrs);
+  },
+  'organization.AdminChanged': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
+    const orgId = event.data[0].toHuman();
+    await updateOrganization(ctx, orgId, extrs);
+  },
 };
+
+async function updateOrganization(ctx: Context, orgId: string, extrs: any[]) {
+  const org = await (ctx.api.query as any).organization.organizations(orgId);
+  console.log('Processing org:', org.toHuman());
+  await ctx.db
+    .collection('organizations')
+    .updateOne(
+      { _id: orgId },
+      { $set: { ...org.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs) } }
+    , { upsert: true });
+}
 
 function getTimestampFromExtrinsics(extrs: any[]) {
   return extrs
