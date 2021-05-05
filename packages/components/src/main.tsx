@@ -18,7 +18,7 @@ import type { Block, Hash } from '@polkadot/types/interfaces';
 
 import type { MongoClient, Db } from 'mongodb';
 
-const _ = require('lodash');
+// const _ = require('lodash');
 const crc32 = require('crc32');
 
 class Context {
@@ -35,35 +35,35 @@ class Context {
   }
 }
 
-const metaClassMap: any = {
-  balances: {
-    forceTransfer: 'transfer',
-    transferKeepAlive: 'transfer',
-    transfer: 'transfer',
-  },
-  timestamp: {
-    set: 'set',
-  },
-};
+// const metaClassMap: any = {
+//   balances: {
+//     forceTransfer: 'transfer',
+//     transferKeepAlive: 'transfer',
+//     transfer: 'transfer',
+//   },
+//   timestamp: {
+//     set: 'set',
+//   },
+// };
 
-const processorClass: any = {
-  timestamp: {
-    set__transfer: (ctx: Context, d: any) => {
-      ctx.db.collection('transfers').updateOne(
-        { _id: d.id },
-        {
-          $set: { ts: d.updater_extr.method.args[0].toNumber(), nonce: d.nonce },
-        }
-      );
-    },
-  },
-};
+// const processorClass: any = {
+//   timestamp: {
+//     set__transfer: (ctx: Context, d: any) => {
+//       ctx.db.collection('transfers').updateOne(
+//         { _id: d.id },
+//         {
+//           $set: { ts: d.updater_extr.method.args[0].toNumber(), nonce: d.nonce },
+//         }
+//       );
+//     },
+//   },
+// };
 
 const systemEventProcessorClass: any = {
   NewAccount: async (ctx: Context, event: any, _eventIdx: number, block: Block, _blockTs: number, _extrIdx: number) => {
     const accountId = event.data[0].toHuman();
     const bal = await ctx.api.query.system.account(accountId);
-    ctx.db.collection('accounts').updateOne(
+    await ctx.db.collection('accounts').updateOne(
       { _id: accountId },
       {
         $set: {
@@ -124,7 +124,7 @@ const eventProcessorClass: any = {
     extrIdx: number
   ) => {
     if (systemEventProcessorClass[method]) {
-      systemEventProcessorClass[method](ctx, event, eventIdx, block, blockTs, extrIdx);
+      await systemEventProcessorClass[method](ctx, event, eventIdx, block, blockTs, extrIdx);
     } else {
       console.log(`Unhandled event: system.${method}`);
     }
@@ -133,20 +133,20 @@ const eventProcessorClass: any = {
 };
 
 const eventPostProcess: any = {
-  'system.NewAccount.timestamp.set': (ctx: Context, _block: Block, event: any, d: any, _extrs: [any]) => {
+  'system.NewAccount': async (ctx: Context, _block: Block, event: any, extrs: [any]) => {
     const accountId = event.data[0].toHuman();
-    ctx.db
+    await ctx.db
       .collection('accounts')
-      .updateOne({ _id: accountId }, { $set: { created_ts: d.updater_extr.method.args[0].toNumber() } });
+      .updateOne({ _id: accountId }, { $set: { created_ts: getTimestampFromExtrinsics(extrs) } }, { upsert: true });
   },
-  'balances.Transfer.*': async (ctx: Context, _block: Block, event: any, _d: any, extrs: any[]) => {
+  'balances.Transfer': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
     const accountId1 = event.data[0].toHuman();
     const accountId2 = event.data[1].toHuman();
     updateTransfer(ctx, accountId1, accountId2, event.data[2].toNumber(), extrs);
     await updateAccount(ctx, accountId1);
     await updateAccount(ctx, accountId2);
   },
-  'identity.IdentitySet.*': async (ctx: Context, _block: Block, event: any, _d: any, _extrs: any[]) => {
+  'identity.IdentitySet': async (ctx: Context, _block: Block, event: any, _extrs: any[]) => {
     const accountId = event.data[0].toHuman();
     await updateAccount(ctx, accountId, new UpdateOptions().setIdentity(true));
   },
@@ -341,24 +341,28 @@ async function processBlock(
 
   // console.log(`${allEvents}`);
 
-  const procExtrs = await Promise.all(
-    extrinsics.map(async (extr, extrIdx) => {
-      const {
-        signer,
-        method: { callIndex, args },
-      } = extr;
-
-      // const extrIndex = `${blockNumber}-${extrIdx}`;
-
+  await Promise.all(
+    extrinsics.map(async (_extr, extrIdx) => {
       allEvents
         .filter(
           ({ phase, event }) =>
             phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrIdx) && event.method != 'ExtrinsicSuccess'
         )
-        .forEach(({ event }, eventIdx) => {
+        .map(async ({ event }, eventIdx) => {
+          await eventProcessorClass[event.section]?.(
+            ctx,
+            event.method,
+            event,
+            eventIdx,
+            block,
+            blockTs?.toNumber(),
+            extrIdx
+          );
+
+          // save event information
           const dataJson = event.data.toJSON();
           const dataHash = crc32(dataJson);
-          colEvents.updateOne(
+          await colEvents.updateOne(
             {
               block: blockNumber,
               extrinsic_index: extrIdx,
@@ -377,123 +381,24 @@ async function processBlock(
             },
             { upsert: true }
           );
-          eventProcessorClass[event.section]?.(ctx, event.method, event, eventIdx, block, blockTs?.toNumber(), extrIdx);
         });
-
-      let method = 'unknown';
-      let section = 'unknown';
-
-      try {
-        const mCall = api.registry.findMetaCall(callIndex);
-        if (mCall != null) {
-          method = mCall.method;
-          section = mCall.section;
-        }
-      } catch (e) {
-        console.log(`[ERROR] ${e}`);
-      }
-      section = section.toString();
-
-      if (metaClassMap[`${section}`] && metaClassMap[`${section}`][`${method}`] == 'transfer') {
-        console.log(`\n${extr}`);
-        console.log(`[${blockNumber}] ${section}/${method}: ${signer} -> ${args[0]} amount: ${args[1]}`);
-
-        // const query = {
-        //   src: `${signer}`,
-        //   nonce: extr.nonce.toNumber(),
-        // };
-
-        // let result = await colTrf.updateOne(
-        //   query,
-        //   {
-        //     $set: {
-        //       src: `${signer}`,
-        //       nonce: extr.nonce.toNumber(),
-        //       block: blockNumber,
-        //       extrinsic_index: extrIndex,
-        //       dst: `${args[0]}`,
-        //       amount: `${args[1]}`,
-        //     },
-        //   },
-        //   { upsert: true }
-        // );
-
-        // // If nothing has changed, don't do further processing.
-        // if (result.upsertedCount == 0 && result.modifiedCount == 0) {
-        //   return [];
-        // }
-
-        // const obj = await colTrf.findOne(query);
-        // return [{ trait: 'target', section, method, id: obj._id, nonce: extr.nonce.toNumber() }];
-        return [];
-      } else if (section == 'identity') {
-        return [{ trait: 'target', section, method, extr }];
-      } else if (section == 'timestamp') {
-        return [{ trait: 'updater', section, method, extr }];
-      } else if (section == 'sudo') {
-        return [{ trait: 'updater', section, method, extr }];
-      } else if (section != 'authorship') {
-        console.log(`[${blockNumber}] ${section} ${extr}`);
-      }
-      return [];
     })
   );
 
-  const [updater, targets] = _.partition(
-    _.flatMap(procExtrs, (a: any) => a),
-    (d: any) => d.trait == 'updater'
-  );
-
-  if (updater.length > 0) {
-    targets.forEach((d: any) => {
-      const { section, method } = d;
-      if (metaClassMap[section] != null) {
-        const _method = metaClassMap[section][method];
-        d.updater_extr = updater[0].extr;
-        if (
-          processorClass[`${updater[0].section}`] &&
-          processorClass[`${updater[0].section}`][`${updater[0].method}__${_method}`]
-        ) {
-          processorClass[`${updater[0].section}`][`${updater[0].method}__${_method}`](ctx, d);
-        }
-      }
-
-      allEvents.forEach(({ event }) => {
-        let key = `${event.section}.${event.method}.${updater[0].section}.${updater[0].method}`;
-        let processed = false;
-        if (eventPostProcess[key]) {
-          eventPostProcess[key](ctx, block, event, d);
-          processed = true;
-        }
-        key = `${event.section}.${event.method}.*`;
-        if (eventPostProcess[key]) {
-          eventPostProcess[key](ctx, block, event, d);
-          processed = true;
-        }
-        if (!processed) {
-          console.log(`event not handled: ${key}`);
-        }
-      });
-    });
-
-    // proses events yang tidak terkait dengan extrinsic lainnya
-    allEvents.forEach(({ event }) => {
+  // proses events yang tidak terkait dengan extrinsic lainnya
+  Promise.all(
+    allEvents.map(async ({ event }) => {
       let key = `${event.section}.${event.method}`;
       let processed = false;
       if (eventPostProcess[key]) {
-        eventPostProcess[key](ctx, block, event, null, extrinsics);
+        await eventPostProcess[key](ctx, block, event, extrinsics);
         processed = true;
       }
-      key = `${event.section}.${event.method}.*`;
-      if (eventPostProcess[key]) {
-        eventPostProcess[key](ctx, block, event, null, extrinsics);
-        processed = true;
-      }
-      if (!processed && key != 'system.ExtrinsicSuccess.*') {
+      if (!processed && key != 'system.ExtrinsicSuccess') {
         console.log(`event not handled: ${key}`);
       }
-    });
-  }
+    })
+  );
 
   try {
     // finally add the block into the db
