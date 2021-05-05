@@ -22,7 +22,7 @@ require('dotenv').config();
 async function main() {
     const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 
-    const api = await Nuchain.connectApi();
+    const api = await Nuchain.connectApi({});
 
     const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
         MongoClient.connect(dbUri, async (err, client: MongoClient) => {
