@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import { WsProvider } from '@polkadot/api';
+import { Nuchain } from '@arascan/components';
 import type { Hash } from '@polkadot/types/interfaces';
 import { MongoClient } from 'mongodb';
 import { Context, getLastBlock, processBlock } from '@arascan/components';
@@ -79,13 +80,14 @@ async function main() {
 
     console.log(`Using WS address: ${WS_SOCKET_URL}`);
 
-    const api = await ApiPromise.create({
-        provider: new WsProvider(WS_SOCKET_URL),
-        types: {
-            Address: 'MultiAddress',
-            LookupSource: 'MultiAddress'
-        }
-    });
+    // const api = await ApiPromise.create({
+    //     provider: new WsProvider(WS_SOCKET_URL),
+    //     types: {
+    //         Address: 'MultiAddress',
+    //         LookupSource: 'MultiAddress'
+    //     }
+    // });
+    const api = await Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)});
 
     console.log(`${process.argv}`)
 

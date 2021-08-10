@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise } from '@polkadot/api';
+import { Nuchain } from '@arascan/components';
 import { MongoClient } from 'mongodb';
 import { Context, updateAccount } from '@arascan/components';
 
@@ -43,12 +43,7 @@ async function main() {
 
     const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 
-    const api = await ApiPromise.create({
-        types: {
-            Address: 'MultiAddress',
-            LookupSource: 'MultiAddress'
-        }
-    });
+    const api = await Nuchain.connectApi({});
 
     MongoClient.connect(dbUri, async (err, client: MongoClient) => {
         if (err == null) {
