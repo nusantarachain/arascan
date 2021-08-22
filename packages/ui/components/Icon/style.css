@@ -1,0 +1,23 @@
+.arascan-icon {
+  @apply inline-block;
+  @apply w-6;
+  @apply h-6;
+  @apply align-middle;
+  @apply flex-shrink-0;
+  fill: theme('colors.green.brand');
+  cursor: pointer;
+}
+
+.arascan-outline {
+  fill: none;
+  stroke: theme('colors.green.brand');
+}
+
+.arascan-icon--small {
+  @apply w-4;
+  @apply h-4;
+}
+
+.arascan-icon--gray {
+  fill: theme('colors.gray.medium');
+}

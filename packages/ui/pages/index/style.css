@@ -1,0 +1,80 @@
+.overview {
+  @apply grid;
+  @apply gap-5;
+  @apply mb-8;
+
+  @media screen(md) {
+    @apply grid-cols-2;
+  }
+
+  @media screen(lg) {
+    @apply grid-cols-4;
+  }
+}
+
+.activities {
+  @apply grid;
+  @apply gap-5;
+  
+  @media screen(md) {
+    @apply grid-cols-2;
+  }
+
+  & .section {
+    @apply mb-8;
+  
+    & .section__title {
+      @apply text-3xl;
+      @apply font-bold;
+      @apply mb-4;
+      @apply text-green-brand;
+    }
+  }
+
+  & .total-blocks {
+    & .section__content {
+      @apply grid;
+      @apply gap-5;
+      
+      @media screen(lg) {
+        @apply grid-cols-2;
+      }
+    }
+  }
+
+  & .recent-events, & .latest-blocks {
+    & .section__content {
+      @apply grid;
+      @apply gap-3;
+    }
+  }
+}
+
+.list-item {
+  display: block;
+}
+.list-enter-active, .list-leave-active {
+  transition: all 0.8s;
+}
+.list-enter, .list-leave-to {
+  opacity: 0;
+  transform: translateX(70px);
+}
+
+
+.chart {
+  @apply p-6;
+  @apply border;
+  @apply rounded-lg;
+  @apply border-gray-light;
+  @apply flex;
+  @apply items-center;
+  @apply justify-center;
+  max-height: 400px;
+
+  & canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 350px;
+  }
+}

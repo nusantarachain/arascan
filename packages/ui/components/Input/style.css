@@ -1,0 +1,49 @@
+.arascan-input {
+  @apply relative;
+  
+  & input[type=text] {
+    @apply p-3;
+    @apply w-full;
+    @apply border;
+    @apply rounded-md;
+    @apply border-green-medium;
+    @apply text-gray-dark;
+    font-size: 12px;
+    line-height: 14.52px;
+
+    &:focus,
+    &:hover{
+      @apply rounded-md;
+      @apply border-green-brand;
+      outline-color: theme('colors.green.brand');
+    }
+  }
+
+  & .arascan-icon {
+    @apply w-5;
+    @apply h-5;
+    @apply absolute;
+    @apply top-2.5;
+    fill: theme('colors.gray.medium');
+  }
+  
+  &.prepend-icon {
+    & input[type=text] {
+      @apply pl-10;
+    }
+    
+    & .arascan-icon {
+      @apply left-3;
+    }
+  }
+
+  &.append-icon {
+    & input[type=text] {
+      @apply pr-10;
+    }
+    
+    & .arascan-icon {
+      @apply right-3;
+    }
+  }
+}

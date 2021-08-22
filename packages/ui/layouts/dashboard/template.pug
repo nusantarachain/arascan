@@ -1,0 +1,13 @@
+.dashboard
+  .dashboard-nav
+    .dashboard-nav__container.container
+      nuxt-link(to="/")
+        img.brand(src="~/assets/images/image-arascan.svg", alt="ARAScan Logo")
+      AInput.append-icon.search-input
+        input(type="text", name="search", placeholder="Search block or hash...")
+        AIcon(type="magnify", alt="")
+      .user
+        p.user__fullname Agus
+        img.user__avatar(src="~/assets/images/image-avatar-sample.svg", alt="Avatar User")
+  .dashboard-content
+    slot(name="content")

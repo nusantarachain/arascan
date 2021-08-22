@@ -1,0 +1,56 @@
+Dashboard
+  template(v-slot:content)
+    .container
+      .page__title
+        nuxt-link(to="/organizations")
+          AIcon(type="arrow-left", alt="")
+          | Organizations Detail
+      .org-detail
+        .org-detail__header
+          .org-detail__avatar
+            img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+          .org-detail__identity
+            p.org-detail__name
+              | AMIKOM
+              AIcon.tail-icon(type="check", alt="")
+            p.org-detail__id
+              | 5ERAmkq7wKGE6FudZTJxJRCUtNHcHhXHpXTgQm87pNgHK6E1
+              AIcon.tail-icon.arascan-icon--gray(type="clipboard", alt="")
+        .org-detail__body
+          .row
+            .col--title Description
+            .col--content Universitas Amikom Yogyakarta
+          .row
+            .col--title Email
+            .col--content info@amikom.ac.id
+          .row
+            .col--title Website
+            .col--content https://amikom.ac.id
+          .row
+            .col--title Balance
+            .col--content 10.000 ARA
+          .row
+            .col--title Admin
+            .col--content
+              .user
+                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                | AGUS SANTOSO
+                AIcon.tail-icon(type="check", alt="")
+          .row.row--no-border
+            .col--title Members
+            .col--content.members
+              .user
+                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                | AGUS SANTOSO
+                AIcon.tail-icon(type="check", alt="")
+              .user
+                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                | 5EXAEQ2n9dfRZ2GvMkYrJ...
+              .user
+                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                | BAMBANG
+                AIcon.tail-icon(type="check", alt="")
+              .user
+                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                | BUDI SULISTYO
+                AIcon.tail-icon.arascan-icon--gray(type="dash-circle", alt="")

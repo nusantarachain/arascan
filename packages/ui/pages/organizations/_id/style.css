@@ -1,0 +1,87 @@
+.page__title {
+  @apply flex;
+  @apply mb-9;
+
+  & .arascan-icon {
+    @apply mr-3;
+  }
+
+  & a {
+    @apply flex;
+    @apply items-center;
+  }
+}
+
+.org-detail {
+  & .org-detail__header {
+    @apply flex;
+    @apply gap-5;
+    @apply items-center;
+    @apply mb-7;
+  }
+
+  & .org-detail__name {
+    @apply uppercase;
+    @apply text-gray-dark;
+    @apply flex;
+    @apply items-center;
+    font-size: 22px;
+    line-height: 33px;
+  }
+
+  & .org-detail__id {
+    @apply text-gray-medium;
+    @apply flex;
+    @apply items-center;
+    font-size: 18px;
+    line-height: 27px;
+  }
+
+  & .tail-icon {
+    @apply ml-2;
+    width: 22px;
+    height: 22px;
+  }
+
+  & .row {
+    @apply flex;
+    @apply py-3;
+    @apply border-b;
+    @apply border-green-medium;
+
+    & .col--title {
+      @apply w-28;
+      @apply text-gray-medium;
+      font-size: 18px;
+      line-height: 27px;
+    }
+
+    & .col--content {
+      @apply text-gray-dark;
+      font-size: 18px;
+      line-height: 27px;
+    }
+
+    & .user {
+      @apply flex;
+      @apply items-center;
+
+      & img {
+        @apply w-6;
+        @apply h-6;
+        @apply mr-2;
+      }
+    }
+
+    & .members {
+      @apply flex;
+      @apply flex-col;
+      @apply gap-3;
+    }
+
+    &.row--no-border {
+      @apply border-0;
+    }
+  }
+}
+

@@ -1,0 +1,78 @@
+Dashboard
+  template(v-slot:content)
+    .container
+      .page__title
+        nuxt-link(to="/")
+          AIcon(type="arrow-left", alt="")
+          | Block Detail
+      .block-detail
+        .block-detail__title Block #300000110
+        .block-detail__desc
+          .row
+            .col--title Timestamp
+            .col--content : 2021-08-06 18:30:43 (+UTC)
+          .row
+            .col--title Status
+            .col--content
+            | : 
+            AIcon.head-icon(type="check", alt="")
+            | Finalized
+          .row
+            .col--title Hash
+            .col--content
+              | : 0xd653784766XXX...
+              AIcon.tail-icon.arascan-icon--gray(type="clipboard", alt="")
+          .row
+            .col--title Parent Hash
+            .col--content : 0xd653784766XXX...
+          .row
+            .col--title Validator
+            .col--content
+              | : 
+              .user
+                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                | 5EXAEQ2n9dfRZ2GvMkYrJ...
+                AIcon.tail-icon.arascan-icon--gray(type="clipboard", alt="")
+          .row.row--no-border
+            .col--title Blocktime
+            .col--content : 5 minuts ago
+      Tabs(v-model="currentTab", :tabs="tabs")
+        .s(v-if="currentTab === 1")
+          .extrinsics-table
+            .thead.trow.trow--colored
+              .tcol ID
+              .tcol HASH
+              .tcol TIME
+              .tcol RESULT
+              .tcol ACTION
+            div(v-for="(ext, index) in extrinsics", :key="index")
+              .tbody.trow(:class="{'trow--colored': index % 2, 'trow--expand': ext.expand}")
+                .tcol {{ ext.id }}
+                .tcol {{ ext.hash || '-' }}
+                .tcol {{ ext.time }}
+                .tcol 
+                  AIcon(v-if="ext.result", type="check", alt="")
+                  AIcon(v-else, type="dash-circle", alt="")
+                .tcol
+                  | {{ ext.action }}
+                  AIcon.collapsible__icon(v-if="!ext.expand", type="chevron-down-circle", alt="", @click.native="ext.expand = true")
+                  AIcon.collapsible__icon(v-else, type="chevron-up-circle", alt="", @click.native="ext.expand = false")
+              .trow.trow--collapsible(v-if="ext.expand", :class="{'trow--colored': index % 2}")
+                .tcol.collapsible__content
+                  .row
+                    .col--title From
+                    .col--content : {{ ext.from }}
+                  .row
+                    .col--title To
+                    .col--content : {{ ext.to }}
+                  .row
+                    .col--title Amount
+                    .col--content : {{ ext.amount }}
+            .tactions.trow.trow--colored
+              .tcol
+                .row-per-page Rows per page: 10
+                .row-count-data 1-6 of 6
+                .row-page-directions
+                  AIcon(type="chevron-left", alt="Prev")
+                  AIcon(type="chevron-right", alt="Next")
+        //- .comments(v-if="currentTab === 2")

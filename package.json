@@ -16,6 +16,7 @@
     "start:headwatcher": "yarn workspace @arascan/headwatcher start",
     "start:sequencer": "yarn workspace @arascan/sequencer start",
     "start:account-updater": "yarn workspace @arascan/sequencer start-account-updater",
+    "start:ui": "yarn workspace @arascan/ui dev",
     "prettify": "npx prettier . --write"
   },
   "devDependencies": {
