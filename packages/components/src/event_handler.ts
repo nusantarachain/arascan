@@ -57,7 +57,27 @@ const eventHandler: any = {
     const eventIdx = event.data[2].toNumber();
     await updateProductTrackingStatus(ctx, trackingId, eventIdx, extrs);
   },
+  'certificate.CertAdded': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
+    const certificateId = event.data[1].toHuman();
+    await updateCertificate(ctx, certificateId, extrs);
+  },
 };
+
+async function updateCertificate(ctx: Context, certificateId: string, extrs: any[]) {
+  const certificate = await (ctx.api.query as any).certificate.certificates(certificateId);
+  if (!certificate) {
+    return;
+  }
+
+  console.log('Processing cert:', certificate.toHuman());
+  await ctx.db
+    .collection('certificates')
+    .updateOne(
+      { _id: certificateId },
+      { $set: { ...certificate.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs) } },
+      { upsert: true }
+    );
+}
 
 async function updateProductTrackingStatus(ctx: Context, trackingId: string, eventIdx: number, _extrs: any[]) {
   const _tracking = await (ctx.api.query as any).productTracking.tracking(trackingId);
@@ -231,13 +251,11 @@ async function updateAccount(ctx: Context, accountId: string, opts: UpdateOption
 async function updateStats(ctx: Context) {
   const { api, db } = ctx;
 
+  const nodes = (await api.rpc.system.peers()).map((a) => a.toHuman());
+  const runtimeVersion = (api.consts.system.version).specVersion.toNumber();
   const era = (await api.query.staking.currentEra()).unwrap().toNumber();
   const session = (await api.query.session.currentIndex()).toNumber();
   const validators = (await api.query.session.validators()).map((a) => a.toHuman());
-  const finalizedBlockHead = await api.rpc.chain
-    .getFinalizedHead()
-    .then((blockHash) => api.rpc.chain.getBlock(blockHash));
-  const finalizedBlockCount = finalizedBlockHead.block.header.number.toNumber();
 
   db.collection('metadata').updateOne(
     { _id: 'stats' },
@@ -246,7 +264,8 @@ async function updateStats(ctx: Context) {
         era,
         session,
         validators,
-        finalizedBlockCount,
+        runtimeVersion,
+        nodes
       },
     },
     { upsert: true }

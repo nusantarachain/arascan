@@ -15,8 +15,9 @@
 import { MongoClient, Db } from 'mongodb';
 import { isHex, toNumber } from '@arascan/components';
 import { WsProvider } from '@polkadot/api';
-
-const restify = require('restify');
+import { Server as IOServer } from "socket.io";
+import * as restify from "restify";
+import { Nuchain } from "@arascan/components";
 
 require('dotenv').config();
 
@@ -247,14 +248,22 @@ function getEvents(req: any, res: any, next: any) {
 async function queryStats(db: any) {
   const accountCount = await db.collection('accounts').countDocuments({});
   const eventCount = await db.collection('events').countDocuments({});
-  const { era, finalizedBlockCount, session, validators } = await db.collection('metadata').findOne({ _id: 'stats' });
+  const organizationCount = await db.collection('organizations').countDocuments({});
+  const productCount = await db.collection('products').countDocuments({});
+  const certificateCount = await db.collection('certificates').countDocuments({});
+  const { era, session, validators, runtimeVersion, nodes } = await db.collection('metadata').findOne({ _id: 'stats' });
+
   return {
     accounts: accountCount,
     events: eventCount,
+    organizations: organizationCount,
+    products: productCount,
+    certificates: certificateCount,
     era,
-    finalized_block: finalizedBlockCount,
     session,
     validators,
+    runtimeVersion,
+    nodes
   };
 }
 
@@ -294,81 +303,68 @@ function getToken(_req: any, res: any, next: any) {
   }).done(next);
 }
 
-const WebSocket = require('ws');
-
 const server = restify.createServer();
-
-const wss = new WebSocket.Server({ server: server.server });
-
 server.use(restify.plugins.queryParser());
-
 server.use(function crossOrigin(_req: any, res: any, next: any) {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With');
   return next();
 });
 
-function wsSend(ws: WebSocket, data: any) {
+const io = new IOServer(server.server, {
+  cors: {
+    origin: "*"
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log("Connect to client");
+  socket.on('disconnect', function() {
+    console.log("Disconnect");
+  });
+});
+
+function wsSend(io: any, key: any, value: any) {
   try {
-    ws.send(JSON.stringify(data));
+    io.emit(key, JSON.stringify(value));
   } catch (error) {
     console.log(error);
   }
 }
 
-const WS_CLIENTS: any = [];
-wss.on('connection', function connection(ws: any) {
-  WS_CLIENTS.push(ws);
-
-  console.log('got ws connection');
-  ws.on('message', function incoming(message: any) {
-    console.log('received: %s', message);
-  });
-  wsSend(ws, {
-    type: 'connected',
-  });
-
-  ws.on('close', () => {
-    console.log('ws client closed');
-    WS_CLIENTS.splice(WS_CLIENTS.indexOf(ws), 1);
-  });
-
-  ws.on('error', () => {
-    console.log('WS ERROR');
-    WS_CLIENTS.splice(WS_CLIENTS.indexOf(ws), 1);
-    console.log(WS_CLIENTS);
-  });
-});
-
 const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944';
 
 console.log(`Using WS socket address: ${WS_SOCKET_URL}`);
 
-import { Nuchain } from "@arascan/components";
-
 Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)})
-.then((api) => {
-  api.rpc.chain.subscribeNewHeads(async (head: any) => {
-    const blockHash = await api.rpc.chain.getBlockHash(head.number);
+  .then((api) => {
+    api.rpc.chain.subscribeNewHeads(async (head: any) => {
+      const blockHash = await api.rpc.chain.getBlockHash(head.number);
+      const finalizedBlockHash = await api.rpc.chain.getFinalizedHead();
+      const finalizedBlockHead = await api.rpc.chain.getHeader(finalizedBlockHash);
 
-    WS_CLIENTS.forEach((ws: any) => {
-      wsSend(ws, {
-        type: 'new_block',
+      wsSend(io, 'new_block', {
         data: {
-          number: head.number.toNumber(),
-          hash: blockHash,
+          best: {
+            number: head.number.toNumber(),
+            hash: blockHash,
+          },
+
+          finalized: {
+            number: finalizedBlockHead.number.toNumber(),
+            hash: finalizedBlockHash,
+          },
         },
       });
 
       withDb(async (db, _client) => {
-        wsSend(ws, {
-          type: 'stats',
+        wsSend(io, 'stats', {
           data: await queryStats(db),
         });
       });
+
     });
   });
-});
 
 server.get('/account/:addr/transfers', getAccountTransfers);
 server.get('/account/:addr/staking_txs', getAccountStakingTxs);

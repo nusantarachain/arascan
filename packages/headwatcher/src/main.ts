@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // import { ApiPromise } from '@polkadot/api';
+import { WsProvider } from '@polkadot/api';
 import { Nuchain } from '@arascan/components';
 import { MongoClient } from 'mongodb';
 import { Context, processBlock, updateStats } from '@arascan/components';
@@ -21,8 +22,8 @@ require('dotenv').config();
 
 async function main() {
     const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-
-    const api = await Nuchain.connectApi({});
+    const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944'
+    const api = await Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)});
 
     // const api = await ApiPromise.create({
     //     // provider: new WsProvider(WS_SOCKET_URL),
