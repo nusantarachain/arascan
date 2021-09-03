@@ -9,7 +9,8 @@ Dashboard
         .org-table__header
           AInput.prepend-icon.org-table__search
             AIcon(type="magnify", alt="")
-            input(type="text", name="search", placeholder="Search organizations...")
+            form(v-on:submit.prevent="donothing")
+              input(type="text", name="search", placeholder="Search organizations...", v-model="search", v-on:keyup="searchOrganizations")
         .thead.trow.trow--colored
           .tcol.tcol--name ORGANIZATION
           .tcol DESCRIPTION
@@ -17,7 +18,8 @@ Dashboard
         .tbody.trow(v-for="(org, index) in organizations", :key="index", :class="{'trow--colored': index % 2}")
           .tcol.tcol--name {{ org.name }}
           .tcol {{ org.desc }}
-          .tcol.tcol--address {{ org.address }}
+          .tcol.tcol--address
+            a(:href="org.link") {{ org.address }}
         .tactions.trow.trow--colored
           .tcol
             .row-per-page Rows per page: 10

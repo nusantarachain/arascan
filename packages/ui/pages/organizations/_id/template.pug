@@ -2,7 +2,7 @@ Dashboard
   template(v-slot:content)
     .container
       .page__title
-        nuxt-link(to="/organizations")
+        a(href="/organizations")
           AIcon(type="arrow-left", alt="")
           | Organizations Detail
       .org-detail
@@ -11,46 +11,35 @@ Dashboard
             img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
           .org-detail__identity
             p.org-detail__name
-              | AMIKOM
+              | {{ org.name }}
               AIcon.tail-icon(type="check", alt="")
             p.org-detail__id
-              | 5ERAmkq7wKGE6FudZTJxJRCUtNHcHhXHpXTgQm87pNgHK6E1
+              | {{ org.address }}
               AIcon.tail-icon.arascan-icon--gray(type="clipboard", alt="")
         .org-detail__body
           .row
             .col--title Description
-            .col--content Universitas Amikom Yogyakarta
+            .col--content {{ org.description }}
           .row
             .col--title Email
-            .col--content info@amikom.ac.id
+            .col--content {{ org.email }}
           .row
             .col--title Website
-            .col--content https://amikom.ac.id
+            .col--content {{ org.website }}
           .row
             .col--title Balance
-            .col--content 10.000 ARA
+            .col--content {{ org.balance }}
           .row
             .col--title Admin
             .col--content
               .user
                 img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
-                | AGUS SANTOSO
+                | {{ org.admin.identity != undefined ? org.admin.identity.display : org.admin._id.shorty() }}
                 AIcon.tail-icon(type="check", alt="")
           .row.row--no-border
             .col--title Members
             .col--content.members
-              .user
+              .user(v-for="(member, index) in org.members", :key="index")
                 img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
-                | AGUS SANTOSO
+                | {{ member.identity != undefined ? member.identity.display : member._id.shorty() }}
                 AIcon.tail-icon(type="check", alt="")
-              .user
-                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
-                | 5EXAEQ2n9dfRZ2GvMkYrJ...
-              .user
-                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
-                | BAMBANG
-                AIcon.tail-icon(type="check", alt="")
-              .user
-                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
-                | BUDI SULISTYO
-                AIcon.tail-icon.arascan-icon--gray(type="dash-circle", alt="")
