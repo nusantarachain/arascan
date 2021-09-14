@@ -9,6 +9,11 @@ const props = {
     type: String,
     default: 'Title',
     required: true
+  },
+  link: {
+    type: String,
+    default: '/',
+    required: false
   }
 }
 

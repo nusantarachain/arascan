@@ -16,14 +16,8 @@ Dashboard
           .tcol DESCRIPTION
           .tcol.tcol--address ADDRESS
         .tbody.trow(v-for="(org, index) in organizations", :key="index", :class="{'trow--colored': index % 2}")
-          .tcol.tcol--name {{ org.name }}
+          .tcol.tcol--name 
+            a(:href="org.link") {{ org.name }}
           .tcol {{ org.desc }}
           .tcol.tcol--address
             a(:href="org.link") {{ org.address }}
-        .tactions.trow.trow--colored
-          .tcol
-            .row-per-page Rows per page: 10
-            .row-count-data 1-6 of 6
-            .row-page-directions
-              AIcon(type="chevron-left", alt="Prev")
-              AIcon(type="chevron-right", alt="Next")

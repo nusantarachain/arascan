@@ -2,30 +2,28 @@ Dashboard.dashboard--green
   template(v-slot:content)
     .container.wrapper
       .overview
-        WidgedBlock(v-for="(widget, index) in overviews", :icon="widget.icon", :title="widget.title", :value="widget.value", :key="index")
+        WidgedBlock(v-for="(widget, index) in overviews", :icon="widget.icon", :title="widget.title", :value="widget.value", :key="index", :link="widget.link")
       .activities
         .left
           .section.total-blocks
             h1.section__title Total Blocks
             .section__content
-              WidgedBlock(v-for="(widget, index) in blocks", :icon="widget.icon", :title="widget.title", :value="widget.value", :key="index")
+              WidgedBlock(v-for="(widget, index) in blocks", :icon="widget.icon", :title="widget.title", :value="widget.value", :key="index", :link="widget.link")
           .section.recent-events
             h1.section__title Recent Events
             transition-group.section__content(name="list", tag="div")
-              WidgedList(v-for="(widget, index) in recentEvents", :title="widget.title", :key="widget.id", class="list-item", @click.native="addEvents")
+              WidgedList(v-for="(widget, index) in recentEvents", :title="widget.title", :key="widget.id", class="list-item", :link="widget.link")
                 template(v-slot:content)
-                  span {{ widget.subtitle }}
+                  a(:href='widget.link')
+                    span {{ widget.subtitle }}
                 template(v-slot:additional)
                   AIcon.icon-time(type="time", alt="Time")
                   span {{ widget.time }}
         .right
-          .section
-            client-only
-              line-chart.chart(:chart-data="chartData")
           .section.latest-blocks
             h1.section__title Latest Blocks
             transition-group.section__content(name="list", tag="div")
-              WidgedList(v-for="(widget, index) in latestBlocks", :title="widget.title", :key="widget.id", class="list-item", @click.native="addBlocks")
+              WidgedList(v-for="(widget, index) in latestBlocks", :title="widget.title", :key="widget.id", class="list-item", :link="widget.link")
                 template(v-slot:content)
                   span {{ widget.extrinsil }}
                   AIcon.icon-dot(type="dot", alt="Time")

@@ -11,6 +11,9 @@
       "version": "detect"
     }
   },
+  "parserOptions": {
+    "sourceType": "module"
+  },
   "rules": {
     "no-only-tests/no-only-tests": "error",
     "no-console": "off",
@@ -24,7 +27,8 @@
       "files": ["*.ts", "*.tsx"],
       "parserOptions": {
         "project": "packages/*/{src,test}/tsconfig.json",
-        "EXPERIMENTAL_useSourceOfProjectReferenceRedirect": true
+        "EXPERIMENTAL_useSourceOfProjectReferenceRedirect": true,
+        "sourceType": "module"
       },
       "extends": [
         "plugin:@typescript-eslint/recommended",

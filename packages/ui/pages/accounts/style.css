@@ -1,0 +1,189 @@
+.page__title {
+  @apply flex;
+  @apply mb-9;
+
+  & .arascan-icon {
+    @apply mr-3;
+  }
+
+  & a {
+    @apply flex;
+    @apply items-center;
+  }
+}
+
+.org-table {
+  @apply overflow-hidden;
+  
+  & .org-table__header {
+    @apply py-5;
+    @apply px-4;
+
+    @media screen(lg) {
+      @apply px-12;
+    }
+  }
+
+  & .org-table__search {
+    max-width: 380px;
+  }
+
+  & .trow {
+    @apply px-4;
+    @apply flex;
+    @apply flex-col;
+    
+    @media screen(lg) {
+      @apply px-12;
+      @apply flex-row;
+    }
+  }
+
+  & .trow--colored {
+    @apply border-t;
+    @apply border-b;
+    @apply border-green-medium;
+    @apply bg-green-light;
+  }
+
+  & .tcol {
+    @apply py-4;
+    @apply w-full;
+  }
+
+  & .tcol--block {
+    max-width: 200px;
+  }
+
+  & .tcol--event {
+    max-width: 300px;
+  }
+
+  & .tcol--time {
+    max-width: 100px;
+  }
+
+  & .thead,
+  & .tbody {
+    font-size: 16px;
+    line-height: 24px;
+  }
+  
+  & .thead {
+    @apply hidden;
+    @apply uppercase;
+    @apply font-semibold;
+    @apply text-green-brand;
+
+    @media screen(lg) {
+      @apply flex;
+    }
+    
+    & .tcol {
+      @apply py-3;
+    }
+  }
+
+  & .tbody {
+    @apply text-gray-dark;
+  }
+
+  & .tactions {
+    @apply text-green-brand;
+    @apply font-semibold;
+    font-size: 12px;
+    line-height: 18px;
+    
+    & .tcol {
+      @apply flex;
+      @apply gap-12;
+      @apply items-center;
+      @apply justify-end;
+    }
+
+    & .row-page-directions {
+      @apply flex;
+      @apply gap-12;
+
+      & .arascan-icon {
+        @apply w-3;
+        @apply h-3;
+        fill: theme('colors.green.brand');
+      }
+    }
+  }
+}
+
+.org-detail {
+  & .org-detail__header {
+    @apply flex;
+    @apply gap-3;
+    @apply items-center;
+    @apply mb-2;
+  }
+
+  & .org-detail__name {
+    @apply uppercase;
+    @apply text-gray-dark;
+    @apply flex;
+    @apply items-center;
+    font-size: 18px;
+    line-height: 23px;
+  }
+
+  & .org-detail__id {
+    @apply text-gray-medium;
+    @apply flex;
+    @apply items-center;
+    font-size: 18px;
+    line-height: 23px;
+  }
+
+  & .tail-icon {
+    @apply ml-2;
+    width: 22px;
+    height: 22px;
+  }
+
+  & .row {
+    @apply flex;
+    @apply py-3;
+    @apply border-b;
+    @apply border-green-medium;
+
+    & .col--title {
+      @apply w-28;
+      @apply text-gray-medium;
+      font-size: 18px;
+      line-height: 27px;
+    }
+
+    & .col--content {
+      @apply text-gray-dark;
+      font-size: 18px;
+      line-height: 27px;
+    }
+
+    & .user {
+      @apply flex;
+      @apply items-center;
+
+      & img {
+        @apply w-6;
+        @apply h-6;
+        @apply mr-2;
+      }
+    }
+
+    & .members {
+      @apply flex;
+      @apply flex-col;
+      @apply gap-3;
+    }
+
+    &.row--no-border {
+      @apply border-0;
+    }
+  }
+}
+

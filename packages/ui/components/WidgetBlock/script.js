@@ -19,7 +19,12 @@ const props = {
     type: [String, Number],
     default: 'value',
     required: true
-  }
+  },
+  link: {
+    type: String,
+    default: '/',
+    required: false
+  },
 }
 
 export default {

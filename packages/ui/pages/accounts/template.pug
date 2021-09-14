@@ -1,0 +1,25 @@
+Dashboard
+  template(v-slot:content)
+    .container
+      .page__title
+        nuxt-link(to="/")
+          AIcon(type="arrow-left", alt="")
+          | Accounts
+      .org-table
+        .org-table__header
+          AInput.prepend-icon.org-table__search
+            AIcon(type="magnify", alt="")
+            form(v-on:submit.prevent="donothing")
+              input(type="text", name="search", placeholder="Search accounts...", v-model="search", v-on:keyup="searchAccounts")
+        .tbody.trow(v-for="(account, index) in accounts", :key="index", :class="{'trow--colored': index % 2}")
+          .tcol
+            .org-detail
+              .org-detail__header
+                .org-detail__avatar
+                  img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                .org-detail__identity 
+                  p.org-detail__name
+                    a(:href="account.link") 
+                      | {{ account.name }}
+                  p.org-detail__id
+                    | {{ account.balance }} ARA

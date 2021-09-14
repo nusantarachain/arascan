@@ -42,11 +42,11 @@ const computed = {
   iconClass: function () {
     const icClass = [];
     if(this.size) {
-      icClass.push(`sertiva-icon--${this.size}`)
+      icClass.push(`arascan-icon--${this.size}`)
     }
 
     if(this.fill) {
-      icClass.push(`sertiva-icon--${this.fill}`)
+      icClass.push(`arascan-icon--${this.fill}`)
     }
 
     return icClass;

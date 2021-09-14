@@ -1,0 +1,24 @@
+Dashboard
+  template(v-slot:content)
+    .container
+      .page__title
+        nuxt-link(to="/")
+          AIcon(type="arrow-left", alt="")
+          | Events
+      .org-table
+        .org-table__header
+          AInput.prepend-icon.org-table__search
+            AIcon(type="magnify", alt="")
+            form(v-on:submit.prevent="donothing")
+              input(type="text", name="search", placeholder="Search events...", v-model="search", v-on:keyup="searchEvents")
+        .thead.trow.trow--colored
+          .tcol.tcol--block BLOCK
+          .tcol.tcol--event EVENT
+          .tcol PARAMS
+          .tcol.tcol--time TIME
+        .tbody.trow(v-for="(event, index) in events", :key="index", :class="{'trow--colored': index % 2}")
+          .tcol.tcol--block 
+            a(:href="event.link") {{ event.block }}
+          .tcol.tcol--event {{ event.event }}
+          .tcol {{ event.params }}
+          .tcol.tcol--time {{ event.time }}

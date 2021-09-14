@@ -17,26 +17,26 @@ const components = {
 
 const data = function() {
   return {
-    organizations: [],
+    accounts: [],
     search: ''
   }
 }
 
 const created = function() {
-  this.fetchOrganizations();
+  this.fetchAccounts();
 }
 
 const methods = {
-  fetchOrganizations() {
-    return ApiService.getOrganizations({ limit: 20 })
+  fetchAccounts() {
+    return ApiService.getAccounts({ limit: 10 })
       .then((response) => {
-          const organizations = response.data.entries;
-          this.organizations = organizations.map(x => ({
-              name: x.name,
-              desc: x.description,
-              address: x._id.shorty(),
-              link: `/organizations/${x._id}`
-          }));
+        const accounts = response.data.entries;
+        this.accounts = accounts.map(x => ({
+            name: x.identity != undefined ? x.identity.display : x._id,
+            balance: x.balance.free / 10000000000,
+            address: x._id,
+            link: `/accounts/${x._id}`
+        }));
       })
       .catch((e) => {
           console.log(e);
@@ -47,18 +47,17 @@ const methods = {
     //
   },
 
-  searchOrganizations(e) {
-    console.log(e.keyCode);
+  searchAccounts(e) {
     if (e.keyCode === 13) {
-      return ApiService.getOrganizations({ search: this.search })
+      return ApiService.getAccounts({ search: this.search, limit: 10 })
         .then((response) => {
-            const organizations = response.data.entries;
-            this.organizations = organizations.map(x => ({
-                name: x.name,
-                desc: x.description,
-                address: x._id.shorty(),
-                link: `/organizations/${x._id}`
-            }));
+          const accounts = response.data.entries;
+          this.accounts = accounts.map(x => ({
+              name: x.identity != undefined ? x.identity.display : x._id,
+              balance: x.balance.free,
+              address: x._id,
+              link: `/accounts/${x._id}`
+          }));
         })
         .catch((e) => {
             console.log(e);
