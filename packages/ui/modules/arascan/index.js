@@ -13,7 +13,7 @@
 // limitations under the License.
 import axios from "axios";
 
-const ARA_API_URL = process.env.ARA_API_URL || 'http://192.168.1.200:8089';
+const ARA_API_URL = process.env.ARA_API_URL || 'http://167.99.73.77:8089';
 
 const apiClient = axios.create({
     baseURL: ARA_API_URL,

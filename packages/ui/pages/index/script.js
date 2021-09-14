@@ -8,7 +8,7 @@ import Icon from '~/components/Icon/index.vue'
 import LineChart from '~/components/LineChart/index.js'
 import ApiService from "~/modules/arascan";
 
-const ARA_API_URL = process.env.ARA_API_URL || 'http://192.168.1.200:8089';
+const ARA_API_URL = process.env.ARA_API_URL || 'http://167.99.73.77:8089';
 const socket = io(ARA_API_URL);
 
 const components = {

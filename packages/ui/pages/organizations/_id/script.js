@@ -10,7 +10,7 @@ Object.assign(String.prototype, {
   }
 });
 
-const NUCHAIN_WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'http://192.168.1.200:8089';
+const NUCHAIN_WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'http://167.99.73.77:8089';
 
 const components = {
   Dashboard,
