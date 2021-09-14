@@ -14,9 +14,10 @@
 
 import { MongoClient, Db } from 'mongodb';
 import { isHex, toNumber } from '@arascan/components';
-import { ApiPromise, WsProvider } from '@polkadot/api';
-
-const restify = require('restify');
+import { WsProvider } from '@polkadot/api';
+import { Server as IOServer } from "socket.io";
+import * as restify from "restify";
+import { Nuchain } from "@arascan/components";
 
 require('dotenv').config();
 
@@ -55,9 +56,16 @@ function getAccounts(req: any, res: any, next: any) {
     return next();
   }
 
+  let filter = {};
+  if (req.query.search) {
+    filter['$text'] = {
+      '$search': req.query.search
+    };
+  }
+
   withDb((db, _client) => {
     db.collection('accounts')
-      .find({})
+      .find(filter)
       .sort({ created_ts: -1 })
       .skip(skip)
       .limit(limit)
@@ -229,9 +237,16 @@ function getEvents(req: any, res: any, next: any) {
     return next();
   }
 
+  let filter = {};
+  if (req.query.search) {
+    filter['$text'] = {
+      '$search': req.query.search
+    };
+  }
+
   withDb((db, _client) => {
     db.collection('events')
-      .find({})
+      .find(filter)
       .sort({ block: -1 })
       .skip(skip)
       .limit(limit)
@@ -247,14 +262,22 @@ function getEvents(req: any, res: any, next: any) {
 async function queryStats(db: any) {
   const accountCount = await db.collection('accounts').countDocuments({});
   const eventCount = await db.collection('events').countDocuments({});
-  const { era, finalizedBlockCount, session, validators } = await db.collection('metadata').findOne({ _id: 'stats' });
+  const organizationCount = await db.collection('organizations').countDocuments({});
+  const productCount = await db.collection('products').countDocuments({});
+  const certificateCount = await db.collection('certificates').countDocuments({});
+  const { era, session, validators, runtimeVersion, nodes } = await db.collection('metadata').findOne({ _id: 'stats' });
+
   return {
     accounts: accountCount,
     events: eventCount,
+    organizations: organizationCount,
+    products: productCount,
+    certificates: certificateCount,
     era,
-    finalized_block: finalizedBlockCount,
     session,
     validators,
+    runtimeVersion,
+    nodes
   };
 }
 
@@ -294,84 +317,228 @@ function getToken(_req: any, res: any, next: any) {
   }).done(next);
 }
 
-const WebSocket = require('ws');
+function getOrganizationOne(req: any, res: any, next: any) {
+  const addr = req.params.addr;
+
+  withDb((db, _client) => {
+    return db
+      .collection('organizations')
+      .findOne({ _id: addr })
+      .then((result) => {
+        if (!result) {
+          res.send({ result });
+        } else {
+          if (result.members != undefined) {
+            db
+              .collection('accounts')
+              .find({ _id: {'$in': result.members }})
+              .toArray((err: any, members: Array<any>) => {
+                if (err == null) {
+                  for (var member of members) {
+                    if (member._id === result.admin) {
+                      result.admin = member;
+                    }
+                  }
+            
+                  result.members = members
+                  res.send({ result });
+                }
+              });
+          } else {
+            db
+              .collection('accounts')
+              .find({ _id: {'$in': [result.admin] }})
+              .toArray((err: any, members: Array<any>) => {
+                if (err == null) {
+                  for (var member of members) {
+                    if (member._id === result.admin) {
+                      result.admin = member;
+                    }
+                  }
+  
+                  result.members = members
+                  res.send({ result });
+                }
+              });
+            }
+        }
+      });
+  }).done(next);
+}
+
+function getOrganizations(req: any, res: any, next: any) {
+  const skip = parseInt(req.query.skip || '0');
+  const limit = parseInt(req.query.limit || '50');
+  if (!validOffsetLimit(skip, limit)) {
+    res.send({ entries: [] });
+    return next();
+  }
+
+  let filter = {};
+  if (req.query.search) {
+    filter['$text'] = {
+      '$search': req.query.search
+    };
+  }
+
+  withDb((db, _client) => {
+    db.collection('organizations')
+      .find(filter)
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray((err: any, result: Array<any>) => {
+        if (err == null) {
+          res.send({ entries: result });
+        }
+      });
+    return Promise.resolve();
+  }).done(next);
+}
+
+function getTransfers(req: any, res: any, next: any) {
+  const addr = req.params.addr;
+
+  const skip = parseInt(req.query.skip || '0');
+  const limit = parseInt(req.query.limit || '50');
+  if (!validOffsetLimit(skip, limit)) {
+    res.send({ entries: [] });
+    return next();
+  }
+
+  let filter = { $or: [{ src: addr }, { dst: addr }] }
+
+  withDb((db, _client) => {
+    db.collection('transfers')
+      .find(filter)
+      .sort({ block: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray((err: any, result: Array<any>) => {
+        if (err == null) {
+          res.send({ entries: result });
+        }
+      });
+    return Promise.resolve();
+  }).done(next);
+}
 
 const server = restify.createServer();
-
-const wss = new WebSocket.Server({ server: server.server });
-
 server.use(restify.plugins.queryParser());
-
 server.use(function crossOrigin(_req: any, res: any, next: any) {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'X-Requested-With');
   return next();
 });
 
-function wsSend(ws: WebSocket, data: any) {
+const io = new IOServer(server.server, {
+  cors: {
+    origin: "*"
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log("Connect to client");
+  socket.on('disconnect', function() {
+    console.log("Disconnect");
+  });
+});
+
+function wsSend(io: any, key: any, value: any) {
   try {
-    ws.send(JSON.stringify(data));
+    io.emit(key, JSON.stringify(value));
   } catch (error) {
     console.log(error);
   }
 }
 
-const WS_CLIENTS: any = [];
-wss.on('connection', function connection(ws: any) {
-  WS_CLIENTS.push(ws);
-
-  console.log('got ws connection');
-  ws.on('message', function incoming(message: any) {
-    console.log('received: %s', message);
-  });
-  wsSend(ws, {
-    type: 'connected',
-  });
-
-  ws.on('close', () => {
-    console.log('ws client closed');
-    WS_CLIENTS.splice(WS_CLIENTS.indexOf(ws), 1);
-  });
-
-  ws.on('error', () => {
-    console.log('WS ERROR');
-    WS_CLIENTS.splice(WS_CLIENTS.indexOf(ws), 1);
-    console.log(WS_CLIENTS);
-  });
-});
-
 const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944';
 
 console.log(`Using WS socket address: ${WS_SOCKET_URL}`);
 
-ApiPromise.create({
-  provider: new WsProvider(WS_SOCKET_URL),
-  types: {
-    Address: 'MultiAddress',
-    LookupSource: 'MultiAddress',
-  },
-}).then((api) => {
-  api.rpc.chain.subscribeNewHeads(async (head: any) => {
-    const blockHash = await api.rpc.chain.getBlockHash(head.number);
+Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)})
+  .then((api) => {
+    api.rpc.chain.subscribeNewHeads(async (head: any) => {
+      const blockHash = await api.rpc.chain.getBlockHash(head.number);
+      const finalizedBlockHash = await api.rpc.chain.getFinalizedHead();
+      const finalizedBlockHead = await api.rpc.chain.getHeader(finalizedBlockHash);
 
-    WS_CLIENTS.forEach((ws: any) => {
-      wsSend(ws, {
-        type: 'new_block',
+      wsSend(io, 'new_block', {
         data: {
-          number: head.number.toNumber(),
-          hash: blockHash,
+          best: {
+            number: head.number.toNumber(),
+            hash: blockHash,
+          },
+
+          finalized: {
+            number: finalizedBlockHead.number.toNumber(),
+            hash: finalizedBlockHash,
+          },
         },
       });
 
       withDb(async (db, _client) => {
-        wsSend(ws, {
-          type: 'stats',
+        wsSend(io, 'stats', {
           data: await queryStats(db),
         });
       });
+
     });
+    
+    let lastBlock = 0;
+    let lastBlockEvent = 0;
+    function fetchBlock() {
+      setTimeout(function () {
+          let filter = {};
+          let filterEvent = {};
+          if (lastBlock != 0) {
+            filter = { _id: { '$gt': lastBlock }};
+          }
+
+          if (lastBlockEvent != 0) {
+            filterEvent = { block: { '$gt': lastBlockEvent }}
+          }
+
+          withDb((db, _client) => {
+            db.collection('blocks')
+              .find(filter)
+              .sort({ _id: -1 })
+              .limit(10)
+              .toArray((err: any, result: Array<any>) => {
+                if (err == null && result[0] != undefined) {
+                  lastBlock = result[0]._id;
+                  wsSend(io, 'summary_block', {
+                    data: {
+                      blocks: result
+                    },
+                  });
+                }
+              });
+            
+            db.collection('events')
+              .find(filterEvent)
+              .sort({ block: -1 })
+              .limit(10)
+              .toArray((err: any, result: Array<any>) => {
+                if (err == null && result[0] != undefined) {
+                  lastBlockEvent = result[0].block;
+                  wsSend(io, 'summary_event', {
+                    data: {
+                      events: result
+                    },
+                  });
+                }
+              });
+
+            return Promise.resolve();
+          });
+
+          fetchBlock();
+      }, 3000);
+    }
+
+    fetchBlock();
   });
-});
 
 server.get('/account/:addr/transfers', getAccountTransfers);
 server.get('/account/:addr/staking_txs', getAccountStakingTxs);
@@ -383,6 +550,9 @@ server.get('/blocks', getBlocks);
 server.get('/events', getEvents);
 server.get('/stats', getStats);
 server.get('/token', getToken);
+server.get('/organization/:addr', getOrganizationOne);
+server.get('/organizations', getOrganizations);
+server.get('/transfers/:addr', getTransfers);
 
 const listenAll = process.argv.indexOf('--listen-all') > -1;
 

@@ -15,7 +15,7 @@ services:
       - app-tier
   
   nuchain-node:
-    image: 'anvie/nuchain:latest-alpine'
+    image: 'anvie/nuchain:latest'
     ports:
       - '9933:9933'
       - '9944:9944'

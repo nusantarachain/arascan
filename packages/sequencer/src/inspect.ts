@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise } from '@polkadot/api';
+import { Nuchain } from '@arascan/components';
 import { hexToString } from '@polkadot/util';
 
 require('dotenv').config();
@@ -21,12 +21,7 @@ require('dotenv').config();
 async function main() {
     console.log("Block inspector");
 
-    const api = await ApiPromise.create({
-        types: {
-            Address: 'MultiAddress',
-            LookupSource: 'MultiAddress'
-        }
-    });
+    const api = await Nuchain.connectApi({});
 
     const blockNum = process.argv.find((a) => a.startsWith('--num='))?.split('=')[1];
     if (!blockNum){

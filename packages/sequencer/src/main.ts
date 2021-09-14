@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise, WsProvider } from '@polkadot/api';
-import type { Hash } from '@polkadot/types/interfaces';
+import { WsProvider } from '@polkadot/api';
+import { Nuchain } from '@arascan/components';
+//import type { Hash } from '@polkadot/types/interfaces';
 import { MongoClient } from 'mongodb';
 import { Context, getLastBlock, processBlock } from '@arascan/components';
 
@@ -42,7 +43,7 @@ const MAX_SKIP_BLOCKS = 50;
 const noSkipLimit = process.argv.indexOf('--no-skip-limit') > -1;
 const seqAll = process.argv.indexOf('--all') > -1;
 
-async function startSequencing(ctx: Context, blockHash: Hash, untilBlockNum: number, counter: Counter, done: () => void) {
+async function startSequencing(ctx: Context, blockHash: any, untilBlockNum: number, counter: Counter, done: () => void) {
     const { api } = ctx;
 
     const block = await api.rpc.chain.getBlock(blockHash);
@@ -79,13 +80,14 @@ async function main() {
 
     console.log(`Using WS address: ${WS_SOCKET_URL}`);
 
-    const api = await ApiPromise.create({
-        provider: new WsProvider(WS_SOCKET_URL),
-        types: {
-            Address: 'MultiAddress',
-            LookupSource: 'MultiAddress'
-        }
-    });
+    // const api = await ApiPromise.create({
+    //     provider: new WsProvider(WS_SOCKET_URL),
+    //     types: {
+    //         Address: 'MultiAddress',
+    //         LookupSource: 'MultiAddress'
+    //     }
+    // });
+    const api = await Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)});
 
     console.log(`${process.argv}`)
 
