@@ -38,6 +38,10 @@ const eventHandler: any = {
     const orgId = event.data[0].toHuman();
     await updateOrganization(ctx, orgId, extrs);
   },
+  'organization.MemberAdded': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
+    const orgId = event.data[0].toHuman();
+    await updateOrganization(ctx, orgId, extrs);
+  },
   'organization.AdminChanged': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
     const orgId = event.data[0].toHuman();
     await updateOrganization(ctx, orgId, extrs);
@@ -148,12 +152,15 @@ async function updateOrganization(ctx: Context, orgId: string, extrs: any[]) {
   if (!org) {
     return;
   }
+
   console.log('Processing org:', org.toHuman());
+  const members = await (ctx.api.query as any).organization.members(orgId);
+
   await ctx.db
     .collection('organizations')
     .updateOne(
       { _id: orgId },
-      { $set: { ...org.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs) } },
+      { $set: { ...org.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs), members: members.toJSON() } },
       { upsert: true }
     );
 }

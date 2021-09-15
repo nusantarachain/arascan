@@ -1,0 +1,23 @@
+Dashboard
+  template(v-slot:content)
+    .container
+      .page__title
+        nuxt-link(to="/")
+          AIcon(type="arrow-left", alt="")
+          | Organizations
+      .org-table
+        .org-table__header
+          AInput.prepend-icon.org-table__search
+            AIcon(type="magnify", alt="")
+            form(v-on:submit.prevent="donothing")
+              input(type="text", name="search", placeholder="Search organizations...", v-model="search", v-on:keyup="searchOrganizations")
+        .thead.trow.trow--colored
+          .tcol.tcol--name ORGANIZATION
+          .tcol DESCRIPTION
+          .tcol.tcol--address ADDRESS
+        .tbody.trow(v-for="(org, index) in organizations", :key="index", :class="{'trow--colored': index % 2}")
+          .tcol.tcol--name 
+            a(:href="org.link") {{ org.name }}
+          .tcol {{ org.desc }}
+          .tcol.tcol--address
+            a(:href="org.link") {{ org.address }}

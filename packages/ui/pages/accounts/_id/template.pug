@@ -1,0 +1,85 @@
+Dashboard
+  template(v-slot:content)
+    .container
+      .page__title
+        a(href="/accounts")
+          AIcon(type="arrow-left", alt="")
+          | Detail Account
+      .account-detail
+        .account-detail__header
+          .account-detail__avatar
+            img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+          .account-detail__identity
+            p.account-detail__name
+              | {{ account.address }}
+              span.has-tooltip
+                .tooltip Copied!
+                AIcon.tail-icon.arascan-icon--gray(id="icon-clipboard", type="clipboard", alt="", @click.native="copyToClipboard")
+            p.account-detail__id
+              | Balance: {{ (account.balance.free + account.balance.reserved + account.balance.miscFrozen + account.balance.feeFrozen) / 10000000000 }} ARA
+              span.has-tooltip
+                .tooltip-balance
+                  span Free: {{ account.balance.free / 10000000000 }} ARA
+                  br
+                  span Locked: {{ (account.balance.reserved + account.balance.miscFrozen + account.balance.feeFrozen) / 10000000000 }} ARA
+                AIcon.tail-icon.arascan-icon--gray(type="box", alt="")
+      .block-detail
+        .block-detail__title On-Chain Identity
+        .block-detail__desc
+          .row
+            .col--title Name
+            .col--content : {{ account.identity != undefined ? account.identity.display : '-' }}
+          .row
+            .col--title Email
+            .col--content : {{ account.identity != undefined ? account.identity.email : '-' }}
+          .row
+            .col--title Website
+            .col--content : {{ account.identity != undefined ? account.identity.website : '-' }}
+      Tabs(v-model="currentTab", :tabs="tabs")
+        .s(v-if="currentTab === 1")
+          .extrinsics-table
+            .thead.trow.trow--colored
+              .tcol ID
+              .tcol HASH
+              .tcol TIME
+              .tcol RESULT
+              .tcol ACTION
+            div(v-for="(ext, index) in extrinsics", :key="index")
+              .tbody.trow(:class="{'trow--colored': index % 2, 'trow--expand': ext.expand}")
+                .tcol {{ ext.id }}
+                .tcol {{ ext.hash || '-' }}
+                .tcol {{ ext.time }}
+                .tcol 
+                  AIcon(v-if="ext.result", type="check", alt="")
+                  AIcon(v-else, type="dash-circle", alt="")
+                .tcol
+                  | {{ ext.action }}
+                  AIcon.collapsible__icon(v-if="!ext.expand", type="chevron-down-circle", alt="", @click.native="ext.expand = true")
+                  AIcon.collapsible__icon(v-else, type="chevron-up-circle", alt="", @click.native="ext.expand = false")
+              .trow.trow--collapsible(v-if="ext.expand", :class="{'trow--colored': index % 2}")
+                .tcol.collapsible__content
+                  .row
+                    .col--title From
+                    .col--content : {{ ext.from }}
+                  .row
+                    .col--title To
+                    .col--content : {{ ext.to }}
+                  .row
+                    .col--title Amount
+                    .col--content : {{ ext.amount }}
+        .comments(v-if="currentTab === 2")
+          div.p-8(id="disqus_thread")
+            script.
+              var disqus_config = function () {
+                this.page.url = "http://localhost:3001/accounts/{{ account.address }}";
+                this.page.identifier = "{{ account.address }}";
+              };
+          
+              (function() { // DON'T EDIT BELOW THIS LINE
+              var d = document, s = d.createElement('script');
+              s.src = 'https://arascan.disqus.com/embed.js';
+              s.setAttribute('data-timestamp', +new Date());
+              (d.head || d.body).appendChild(s);
+              })();
+            noscript
+              | Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>

@@ -1,0 +1,42 @@
+.widget--block {
+  @apply flex;
+  @apply p-5;
+  @apply gap-4;
+  @apply bg-white;
+  @apply rounded-md;
+  @apply border;
+  @apply border-gray-lighter;
+
+  & .widget__icon {
+    @apply w-14;
+    @apply h-14;
+    @apply flex;
+    @apply justify-center;
+    @apply items-center;
+    @apply rounded-full;
+    @apply bg-green-brand;
+
+    & svg.arascan-icon {
+      fill: theme('colors.white');
+    }
+  }
+
+  & .widget__content {
+    @apply flex;
+    @apply flex-col;
+    @apply justify-between;
+  }
+
+  & .widget__title {
+    @apply text-lg;
+    @apply text-gray-medium;
+    line-height: 20px;
+  }
+
+  & .widget__value {
+    @apply text-2xl;
+    @apply font-bold;
+    @apply text-gray-dark;
+    line-height: 36px;
+  }
+}

@@ -14,7 +14,7 @@
 
 import { WsProvider } from '@polkadot/api';
 import { Nuchain } from '@arascan/components';
-import type { Hash } from '@polkadot/types/interfaces';
+//import type { Hash } from '@polkadot/types/interfaces';
 import { MongoClient } from 'mongodb';
 import { Context, getLastBlock, processBlock } from '@arascan/components';
 
@@ -43,7 +43,7 @@ const MAX_SKIP_BLOCKS = 50;
 const noSkipLimit = process.argv.indexOf('--no-skip-limit') > -1;
 const seqAll = process.argv.indexOf('--all') > -1;
 
-async function startSequencing(ctx: Context, blockHash: Hash, untilBlockNum: number, counter: Counter, done: () => void) {
+async function startSequencing(ctx: Context, blockHash: any, untilBlockNum: number, counter: Counter, done: () => void) {
     const { api } = ctx;
 
     const block = await api.rpc.chain.getBlock(blockHash);

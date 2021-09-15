@@ -1,0 +1,48 @@
+.widget--list {
+  @apply flex;
+  @apply py-3;
+  @apply px-5;
+  @apply bg-white;
+  @apply rounded-md;
+  @apply items-center;
+  @apply justify-between;
+  @apply border;
+  @apply border-gray-lighter;
+
+  & svg.arascan-icon {
+    fill: theme('colors.white');
+  }
+
+  & .widget__title {
+    @apply font-medium;
+    @apply text-gray-dark;
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  & .widget__content {
+    @apply text-gray-medium;
+    /* font-size: 18px; */
+    line-height: 24px;
+
+    & svg.arascan-icon {
+      width: 6px;
+      height: 6px;
+      @apply mx-2;
+      fill: theme('colors.gray.medium');
+    }
+  }
+
+  & .widget__additional-info {
+    @apply text-gray-light;
+    font-size: 14px;
+    line-height: 21px;
+
+    & svg.arascan-icon {
+      @apply w-4;
+      @apply h-4;
+      @apply mr-2;
+      fill: theme('colors.gray.light');
+    }
+  }
+}

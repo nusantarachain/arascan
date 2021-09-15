@@ -1,0 +1,8 @@
+.widget--list
+  .widget__detail
+    a(:href="link")
+     h6.widget__title {{ title  }} 
+    .widget__content
+      slot(name="content")
+  .widget__additional-info
+    slot(name="additional")

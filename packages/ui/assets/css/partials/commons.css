@@ -1,0 +1,22 @@
+.container {
+  @apply px-4;
+  @apply mx-auto;
+  width: 100%;
+  max-width: 480px;
+
+  @media screen(md) {
+    max-width: 640px;
+  }
+
+  @media screen(lg) {
+    max-width: 960px;
+  }
+
+  @media screen(xl) {
+    max-width: 1200px;
+  }
+
+  @media screen(xxl) {
+    max-width: 1600px;
+  }
+}

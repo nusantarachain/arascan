@@ -1,0 +1,85 @@
+.dashboard-nav {
+  @apply sticky;
+  @apply top-0;
+  @apply left-0;
+  @apply bg-white;
+  z-index: 2;
+
+  & .dashboard-nav__container {
+    @apply p-2;
+    @apply flex;
+    @apply justify-between;
+    @apply items-center;
+    height: 48px;
+
+    & .brand {
+      width: 115px;
+
+      @media screen(lg) {
+        width: 180px;
+      }
+    }
+
+    & .search-input {
+      @apply hidden;
+
+      & .arascan-icon {
+        fill: theme('colors.green.brand');
+      }
+      
+      @media screen(md) {
+        @apply block;
+      }
+
+      @media screen(lg) {
+        min-width: 490px;
+      }
+    }
+
+    & .user {
+      @apply flex;
+      @apply items-center;
+
+      & .user__fullname {
+        @apply hidden;
+
+        @media screen(lg) {
+          @apply block;
+          @apply mr-2;
+          @apply uppercase;
+          @apply font-semibold;
+        }
+      }
+
+      & .user__avatar {
+        @apply w-8;
+        @apply h-8;
+      }
+    }
+  
+    @media screen(lg) {
+      height: 65px;
+    }
+  }
+}
+
+.dashboard-content {
+  @apply py-4;
+  min-height: calc(100vh - 48px);
+
+  & .page__title {
+    @apply text-3xl;
+    @apply font-bold;
+    @apply text-green-brand;
+  }
+  
+  @media screen(lg) {
+    min-height: calc(100vh - 65px);
+  }
+}
+
+.dashboard--green {
+  & .dashboard-content {
+    background: radial-gradient(106.28% 106.28% at 61.04% 73.65%, #EEF9F2 0%, #FFFFFF 100%);
+  }
+}

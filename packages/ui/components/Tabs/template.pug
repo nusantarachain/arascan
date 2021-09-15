@@ -1,0 +1,7 @@
+.tabs 
+  .tabs__header 
+    .tab(v-for="(tab, index) in tabs", :key="index", :class="{'tab--active': value === index + 1}", @click="gotoTab(index + 1)")
+      span.tab__title {{ tab.title }} 
+      span.tab__count(v-if="tab.count") {{ tab.count }}
+  .tabs__content
+    slot

@@ -56,9 +56,16 @@ function getAccounts(req: any, res: any, next: any) {
     return next();
   }
 
+  let filter = {};
+  if (req.query.search) {
+    filter['$text'] = {
+      '$search': req.query.search
+    };
+  }
+
   withDb((db, _client) => {
     db.collection('accounts')
-      .find({})
+      .find(filter)
       .sort({ created_ts: -1 })
       .skip(skip)
       .limit(limit)
@@ -230,9 +237,16 @@ function getEvents(req: any, res: any, next: any) {
     return next();
   }
 
+  let filter = {};
+  if (req.query.search) {
+    filter['$text'] = {
+      '$search': req.query.search
+    };
+  }
+
   withDb((db, _client) => {
     db.collection('events')
-      .find({})
+      .find(filter)
       .sort({ block: -1 })
       .skip(skip)
       .limit(limit)
@@ -303,6 +317,112 @@ function getToken(_req: any, res: any, next: any) {
   }).done(next);
 }
 
+function getOrganizationOne(req: any, res: any, next: any) {
+  const addr = req.params.addr;
+
+  withDb((db, _client) => {
+    return db
+      .collection('organizations')
+      .findOne({ _id: addr })
+      .then((result) => {
+        if (!result) {
+          res.send({ result });
+        } else {
+          if (result.members != undefined) {
+            db
+              .collection('accounts')
+              .find({ _id: {'$in': result.members }})
+              .toArray((err: any, members: Array<any>) => {
+                if (err == null) {
+                  for (var member of members) {
+                    if (member._id === result.admin) {
+                      result.admin = member;
+                    }
+                  }
+            
+                  result.members = members
+                  res.send({ result });
+                }
+              });
+          } else {
+            db
+              .collection('accounts')
+              .find({ _id: {'$in': [result.admin] }})
+              .toArray((err: any, members: Array<any>) => {
+                if (err == null) {
+                  for (var member of members) {
+                    if (member._id === result.admin) {
+                      result.admin = member;
+                    }
+                  }
+  
+                  result.members = members
+                  res.send({ result });
+                }
+              });
+            }
+        }
+      });
+  }).done(next);
+}
+
+function getOrganizations(req: any, res: any, next: any) {
+  const skip = parseInt(req.query.skip || '0');
+  const limit = parseInt(req.query.limit || '50');
+  if (!validOffsetLimit(skip, limit)) {
+    res.send({ entries: [] });
+    return next();
+  }
+
+  let filter = {};
+  if (req.query.search) {
+    filter['$text'] = {
+      '$search': req.query.search
+    };
+  }
+
+  withDb((db, _client) => {
+    db.collection('organizations')
+      .find(filter)
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray((err: any, result: Array<any>) => {
+        if (err == null) {
+          res.send({ entries: result });
+        }
+      });
+    return Promise.resolve();
+  }).done(next);
+}
+
+function getTransfers(req: any, res: any, next: any) {
+  const addr = req.params.addr;
+
+  const skip = parseInt(req.query.skip || '0');
+  const limit = parseInt(req.query.limit || '50');
+  if (!validOffsetLimit(skip, limit)) {
+    res.send({ entries: [] });
+    return next();
+  }
+
+  let filter = { $or: [{ src: addr }, { dst: addr }] }
+
+  withDb((db, _client) => {
+    db.collection('transfers')
+      .find(filter)
+      .sort({ block: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray((err: any, result: Array<any>) => {
+        if (err == null) {
+          res.send({ entries: result });
+        }
+      });
+    return Promise.resolve();
+  }).done(next);
+}
+
 const server = restify.createServer();
 server.use(restify.plugins.queryParser());
 server.use(function crossOrigin(_req: any, res: any, next: any) {
@@ -312,6 +432,7 @@ server.use(function crossOrigin(_req: any, res: any, next: any) {
 });
 
 const io = new IOServer(server.server, {
+  path: "/socket",
   cors: {
     origin: "*"
   }
@@ -364,6 +485,60 @@ Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)})
       });
 
     });
+    
+    let lastBlock = 0;
+    let lastBlockEvent = 0;
+    function fetchBlock() {
+      setTimeout(function () {
+          let filter = {};
+          let filterEvent = {};
+          if (lastBlock != 0) {
+            filter = { _id: { '$gt': lastBlock }};
+          }
+
+          if (lastBlockEvent != 0) {
+            filterEvent = { block: { '$gt': lastBlockEvent }}
+          }
+
+          withDb((db, _client) => {
+            db.collection('blocks')
+              .find(filter)
+              .sort({ _id: -1 })
+              .limit(10)
+              .toArray((err: any, result: Array<any>) => {
+                if (err == null && result[0] != undefined) {
+                  lastBlock = result[0]._id;
+                  wsSend(io, 'summary_block', {
+                    data: {
+                      blocks: result
+                    },
+                  });
+                }
+              });
+            
+            db.collection('events')
+              .find(filterEvent)
+              .sort({ block: -1 })
+              .limit(10)
+              .toArray((err: any, result: Array<any>) => {
+                if (err == null && result[0] != undefined) {
+                  lastBlockEvent = result[0].block;
+                  wsSend(io, 'summary_event', {
+                    data: {
+                      events: result
+                    },
+                  });
+                }
+              });
+
+            return Promise.resolve();
+          });
+
+          fetchBlock();
+      }, 3000);
+    }
+
+    fetchBlock();
   });
 
 server.get('/account/:addr/transfers', getAccountTransfers);
@@ -376,6 +551,9 @@ server.get('/blocks', getBlocks);
 server.get('/events', getEvents);
 server.get('/stats', getStats);
 server.get('/token', getToken);
+server.get('/organization/:addr', getOrganizationOne);
+server.get('/organizations', getOrganizations);
+server.get('/transfers/:addr', getTransfers);
 
 const listenAll = process.argv.indexOf('--listen-all') > -1;
 

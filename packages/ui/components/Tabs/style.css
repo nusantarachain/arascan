@@ -1,0 +1,56 @@
+.tabs {
+  @apply w-full;
+  @apply rounded-lg;
+  @apply border;
+  @apply border-gray-light;
+  @apply overflow-hidden;
+
+  & .tabs__header {
+    @apply flex;
+  }
+
+  & .tab {
+    @apply py-5;
+    @apply px-4;
+    @apply border-r;
+    @apply border-green-medium;
+    @apply flex;
+    @apply items-center;
+    @apply cursor-pointer;
+    
+    @media screen(lg) {
+      @apply px-12;
+    }
+
+    & .tab__title {
+      @apply font-semibold;
+      @apply text-gray-medium;
+      font-size: 18px;
+      line-height: 27px; 
+    }
+
+    & .tab__count {
+      @apply w-7;
+      @apply h-7;
+      @apply ml-3;
+      @apply flex;
+      @apply items-center;
+      @apply justify-center;
+      @apply rounded-full;
+      @apply bg-red-medium;
+      @apply text-white;
+    }
+
+    &.tab--active {
+      @apply bg-green-light;
+
+      & .tab__title {
+        @apply text-green-brand;
+      }
+    }
+
+    &.tab--no-border {
+      @apply border-0;
+    }
+  }
+}
