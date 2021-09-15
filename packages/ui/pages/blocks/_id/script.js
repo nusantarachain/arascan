@@ -6,7 +6,7 @@ import Icon from '~/components/Icon/index.vue'
 import Tabs from '~/components/Tabs/index.vue'
 import ApiService from "~/modules/arascan";
 
-const NUCHAIN_WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'http://167.99.73.77:8089';
+const NUCHAIN_WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'wss://id.node.nuchain.network';
 
 const components = {
   Dashboard,
