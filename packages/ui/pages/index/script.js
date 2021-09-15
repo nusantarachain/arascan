@@ -8,8 +8,8 @@ import Icon from '~/components/Icon/index.vue'
 import LineChart from '~/components/LineChart/index.js'
 import ApiService from "~/modules/arascan";
 
-const ARA_API_URL = process.env.ARA_API_URL || 'https://scan.nuchain.live/socket';
-const socket = io(ARA_API_URL);
+const ARA_API_URL = process.env.ARA_API_URL || 'https://scan.nuchain.live';
+const socket = io(ARA_API_URL, { path: '/socket' });
 
 const components = {
   Dashboard,
