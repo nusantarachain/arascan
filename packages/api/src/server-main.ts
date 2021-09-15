@@ -432,6 +432,7 @@ server.use(function crossOrigin(_req: any, res: any, next: any) {
 });
 
 const io = new IOServer(server.server, {
+  path: "/socket",
   cors: {
     origin: "*"
   }
