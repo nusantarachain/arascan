@@ -25,6 +25,7 @@ const data = function() {
 }
 
 const created = function() {
+  ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchEvents();
 }
 

@@ -34,6 +34,7 @@ const data = function() {
 }
 
 const created = function() {
+  ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchAccount(this.$route.params.id);
   this.fetchActivities(this.$route.params.id);
 }

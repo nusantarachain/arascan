@@ -6,8 +6,6 @@ import Icon from '~/components/Icon/index.vue'
 import Tabs from '~/components/Tabs/index.vue'
 import ApiService from "~/modules/arascan";
 
-const NUCHAIN_WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'wss://id.node.nuchain.network';
-
 const components = {
   Dashboard,
   AIcon: Icon,
@@ -41,6 +39,7 @@ const data = function() {
 }
 
 const mounted = function() {
+  ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchBlock(this.$route.params.id);
   this.fetchDetail(this.$route.params.id);
 }
@@ -66,7 +65,7 @@ const methods = {
   },
 
   fetchDetail(block) {
-    Nuchain.connectApi({provider: new WsProvider(NUCHAIN_WS_SOCKET_URL)})
+    Nuchain.connectApi({provider: new WsProvider(this.$config.nuchainSocketUrl)})
       .then((api) => {
         api.rpc.chain.getBlockHash(block)
           .then((blockHash) => {
@@ -78,7 +77,7 @@ const methods = {
                   const { method: { args, method, section } } = ex;
                   console.log(`${section}.${method}(${args.map((a) => a.toString()).join(', ')})`);
                   if (section != 'timestamp' && section != 'authorship') {
-                    countindex = index + 1;
+                    countindex = countindex + 1;
                     extrinsics.push({
                       id: `${block}-${index}`,
                       hash: '-',

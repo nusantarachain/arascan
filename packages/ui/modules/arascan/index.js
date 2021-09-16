@@ -13,18 +13,18 @@
 // limitations under the License.
 import axios from "axios";
 
-const ARA_API_URL = process.env.ARA_API_URL || 'https://scan.nuchain.live/api';
-
-const apiClient = axios.create({
-    baseURL: ARA_API_URL,
-    headers: {
-        "Content-type": "application/json",
-    },
-});
-
 class ApiService {
+    setBaseUrl(baseURL) {
+        this.apiClient = axios.create({
+            baseURL: baseURL,
+            headers: {
+                "Content-type": "application/json",
+            },
+        });
+    }
+
     getStats() {
-        return apiClient.get("/stats");
+        return this.apiClient.get("/stats");
     }
 
     getAccounts(params) {
@@ -41,23 +41,23 @@ class ApiService {
                 query += '&limit=' + limit;
             }
         }
-        return apiClient.get(`/accounts?${query}`);
+        return this.apiClient.get(`/accounts?${query}`);
     }
 
     getAccount(addr) {
-        return apiClient.get(`/account/${addr}`);
+        return this.apiClient.get(`/account/${addr}`);
     }
 
     getAccountTransfers(addr) {
-        return apiClient.get(`/account/${addr}/transfers`);
+        return this.apiClient.get(`/account/${addr}/transfers`);
     }
 
     getAccountStakingTxs(addr) {
-        return apiClient.get(`/account/${addr}/transfers`);
+        return this.apiClient.get(`/account/${addr}/transfers`);
     }
 
     getAccountRewardSlashes(addr) {
-        return apiClient.get(`/account/${addr}/transfers`);
+        return this.apiClient.get(`/account/${addr}/transfers`);
     }
 
     getBlocks(params) {
@@ -70,11 +70,11 @@ class ApiService {
                 query += '&limit=' + limit;
             }
         }
-        return apiClient.get(`/blocks?${query}`);
+        return this.apiClient.get(`/blocks?${query}`);
     }
 
     getBlock(block) {
-        return apiClient.get(`/block/${block}`);
+        return this.apiClient.get(`/block/${block}`);
     }
 
     getEvents(params) {
@@ -92,11 +92,11 @@ class ApiService {
             }
         }
 
-        return apiClient.get(`/events?${query}`);
+        return this.apiClient.get(`/events?${query}`);
     }
 
     getToken() {
-        return apiClient.get("/token");
+        return this.apiClient.get("/token");
     }
 
     getOrganizations(params) {
@@ -114,11 +114,11 @@ class ApiService {
             }
         }
 
-        return apiClient.get(`/organizations?${query}`);
+        return this.apiClient.get(`/organizations?${query}`);
     }
 
     getOrganization(addr) {
-        return apiClient.get(`/organization/${addr}`);
+        return this.apiClient.get(`/organization/${addr}`);
     }
 
     getTransfers(addr, params) {
@@ -136,7 +136,7 @@ class ApiService {
             }
         }
 
-        return apiClient.get(`/transfers/${addr}?${query}`);
+        return this.apiClient.get(`/transfers/${addr}?${query}`);
     }
 }
   
