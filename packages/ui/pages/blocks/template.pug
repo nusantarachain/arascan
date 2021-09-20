@@ -1,0 +1,25 @@
+Dashboard
+  template(v-slot:content)
+    .container
+      .page__title
+        nuxt-link(to="/")
+          AIcon(type="arrow-left", alt="")
+          | Blocks
+      .org-table
+        .thead.trow.trow--colored
+          .tcol.tcol--block BLOCK
+          .tcol.tcol--event EVENT
+          .tcol.tcol--event EXTRINSICS
+          .tcol.tcol STATUS
+          .tcol TIME
+        .tbody.trow(v-for="(block, index) in blocks", :key="index", :class="{'trow--colored': index % 2}")
+          .tcol.tcol--block 
+            a(:href="block.link") {{ block.id }}
+          .tcol.tcol--event {{ block.event_counts }}
+          .tcol.tcol--event {{ block.ext_counts }}
+          .tcol.tcol
+            AIcon.head-icon(type="check", alt="", v-if="block.status=='Finalized'")
+            .pr-2.pl-2.float-left(v-if="block.status!='Finalized'")
+              img(src="~/assets/images/pending.png", width="20", height="20")
+            | {{ block.status }}
+          .tcol {{ block.time }}

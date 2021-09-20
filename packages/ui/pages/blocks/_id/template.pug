@@ -2,7 +2,7 @@ Dashboard
   template(v-slot:content)
     .container
       .page__title
-        a(href="/")
+        a(href="/blocks")
           AIcon(type="arrow-left", alt="")
           | Block Detail
       .block-detail
@@ -74,7 +74,7 @@ Dashboard
           div.p-8(id="disqus_thread")
             script.
               var disqus_config = function () {
-                this.page.url = "http://localhost:3001/blocks/{{ block.number }}";
+                this.page.url = "{{ $config.baseUrl }}/blocks/{{ block.number }}";
                 this.page.identifier = {{ block.number }};
               };
           
