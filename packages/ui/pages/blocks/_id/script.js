@@ -113,6 +113,11 @@ const methods = {
                   }
                 ];
               });
+
+              api.derive.chain.getHeader(blockHash)
+              .then((header) => {
+                this.block.validator = header.author
+              });
           });
       })
       .catch((e) => {

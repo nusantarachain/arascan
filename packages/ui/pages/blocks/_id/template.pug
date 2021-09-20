@@ -35,7 +35,7 @@ Dashboard
             .col--content
               | : 
               .user
-                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                svg(:data-jdenticon-value="block.validator", width="30", height="30")
                 | {{ block.validator }}
                 span.has-tooltip-validator
                   .tooltip Copied!
@@ -44,7 +44,7 @@ Dashboard
             .col--title Blocktime
             .col--content : {{ block.blocktime }}
       Tabs(v-model="currentTab", :tabs="tabs")
-        .s(v-if="currentTab === 1")
+        .s(v-show="currentTab === 1")
           .extrinsics-table
             .thead.trow.trow--colored
               .tcol ID
@@ -70,7 +70,7 @@ Dashboard
                     .col--title  {{ extContent.key }}
                     .col--content {{ extContent.value }}
             .tactions.trow.trow--colored
-        .comments(v-if="currentTab === 2")
+        .comments(v-show="currentTab === 2")
           div.p-8(id="disqus_thread")
             script.
               var disqus_config = function () {
@@ -86,3 +86,6 @@ Dashboard
               })();
             noscript
               | Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+    script(src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.1/dist/jdenticon.min.js", integrity="sha384-l0/0sn63N3mskDgRYJZA6Mogihu0VY3CusdLMiwpJ9LFPklOARUcOiWEIGGmFELx", crossorigin="anonymous")
+    script. 
+      setTimeout(function(){ jdenticon(); }, 5000);

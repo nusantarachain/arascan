@@ -36,7 +36,7 @@ Dashboard
             .col--title Website
             .col--content : {{ account.identity != undefined ? account.identity.website : '-' }}
       Tabs(v-model="currentTab", :tabs="tabs")
-        .s(v-if="currentTab === 1")
+        .s(v-show="currentTab === 1")
           .extrinsics-table
             .thead.trow.trow--colored
               .tcol ID
@@ -67,7 +67,7 @@ Dashboard
                   .row
                     .col--title Amount
                     .col--content : {{ ext.amount }}
-        .comments(v-if="currentTab === 2")
+        .comments(v-show="currentTab === 2")
           div.p-8(id="disqus_thread")
             script.
               var disqus_config = function () {
