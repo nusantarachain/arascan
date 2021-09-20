@@ -15,7 +15,9 @@ Dashboard
             .col--title Status
             .col--content
             | : 
-            AIcon.head-icon(type="check", alt="")
+            AIcon.head-icon(type="check", alt="", v-if="isFinalized")
+            .pr-2.pl-2(v-if="!isFinalized")
+              img(src="~/assets/images/pending.png", width="20", height="20")
             | {{ block.status }}
           .row
             .col--title Hash

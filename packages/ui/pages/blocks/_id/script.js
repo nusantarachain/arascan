@@ -1,5 +1,6 @@
 import { Nuchain, WsProvider } from "nuchain-api";
 import moment from "moment";
+import io from "socket.io-client";
 
 import Dashboard from '~/layouts/dashboard/index.vue'
 import Icon from '~/components/Icon/index.vue'
@@ -14,10 +15,11 @@ const components = {
 
 const data = function() {
   return {
+    isFinalized: false,
     block: {
-      number: '',
+      number: 0,
       timestamp: '',
-      status: '',
+      status: 'Unfinalized',
       hash: '',
       parent_hash: '',
       validator: '',
@@ -42,6 +44,14 @@ const mounted = function() {
   ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchBlock(this.$route.params.id);
   this.fetchDetail(this.$route.params.id);
+
+  const socket = io(this.$config.baseUrl, { path: '/socket' });
+
+  socket.on('new_block', (message) => {
+      message = JSON.parse(message);
+      this.isFinalized = message.data.finalized.number >= this.block.number && this.block.number > 0;
+      this.block.status = this.isFinalized ? 'Finalized' : 'Unfinalized';
+  });
 }
 
 const methods = {
@@ -52,7 +62,7 @@ const methods = {
           this.block = {
             number: block._id,
             timestamp: new Date(block.extrinsics[0].method.args.now).toUTCString(),
-            status: 'finalized',
+            status: 'Unfinalized',
             hash: block.block_hash,
             parent_hash: block.block_parent_hash,
             parent_hash_link: `/blocks/${block._id - 1}`,
