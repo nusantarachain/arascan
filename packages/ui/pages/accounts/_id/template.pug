@@ -8,7 +8,7 @@ Dashboard
       .account-detail
         .account-detail__header
           .account-detail__avatar
-            img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+            svg(:data-jdenticon-value="account.address", width="50", height="50")
           .account-detail__identity
             p.account-detail__name
               | {{ account.address }}
@@ -16,12 +16,12 @@ Dashboard
                 .tooltip Copied!
                 AIcon.tail-icon.arascan-icon--gray(id="icon-clipboard", type="clipboard", alt="", @click.native="copyToClipboard")
             p.account-detail__id
-              | Balance: {{ (account.balance.free + account.balance.reserved + account.balance.miscFrozen + account.balance.feeFrozen) / 10000000000 }} ARA
+              | Balance: {{ ((account.balance.free + account.balance.reserved + account.balance.miscFrozen + account.balance.feeFrozen) / 10000000000).toFixed(4) }} ARA
               span.has-tooltip
                 .tooltip-balance
-                  span Free: {{ account.balance.free / 10000000000 }} ARA
+                  span Free: {{ (account.balance.free / 10000000000).toFixed(4) }} ARA
                   br
-                  span Locked: {{ (account.balance.reserved + account.balance.miscFrozen + account.balance.feeFrozen) / 10000000000 }} ARA
+                  span Locked: {{ ((account.balance.reserved + account.balance.miscFrozen + account.balance.feeFrozen) / 10000000000).toFixed(4) }} ARA
                 AIcon.tail-icon.arascan-icon--gray(type="box", alt="")
       .block-detail
         .block-detail__title On-Chain Identity
@@ -83,3 +83,6 @@ Dashboard
               })();
             noscript
               | Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+    script(src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.1/dist/jdenticon.min.js", integrity="sha384-l0/0sn63N3mskDgRYJZA6Mogihu0VY3CusdLMiwpJ9LFPklOARUcOiWEIGGmFELx", crossorigin="anonymous")
+    script. 
+      setTimeout(function(){ jdenticon(); }, 2000);

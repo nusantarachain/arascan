@@ -26,7 +26,8 @@ Dashboard
                 AIcon.tail-icon.arascan-icon--gray(id="icon-clipboard", type="clipboard", alt="", @click.native="copyToClipboard('.has-tooltip', '#icon-clipboard')")
           .row
             .col--title Parent Hash
-            .col--content : {{ block.parent_hash }}
+            .col--content :
+              a(:href="block.parent_hash_link") &nbsp; {{ block.parent_hash }}
           .row
             .col--title Validator
             .col--content

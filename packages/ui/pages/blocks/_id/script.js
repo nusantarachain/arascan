@@ -55,6 +55,7 @@ const methods = {
             status: 'finalized',
             hash: block.block_hash,
             parent_hash: block.block_parent_hash,
+            parent_hash_link: `/blocks/${block._id - 1}`,
             validator: '-',
             blocktime: moment(block.extrinsics[0].method.args.now).fromNow() 
           }

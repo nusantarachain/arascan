@@ -64,7 +64,7 @@ const methods = {
       .then((api) => {
         api.query.system.account(addr)
           .then((result) => {
-            this.org.balance = `${result.data.free / 10000000000} ARA`
+            this.org.balance = `${(result.data.free / 10000000000).toFixed(4)} ARA`
           });
       })
       .catch((e) => {

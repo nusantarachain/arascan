@@ -17,7 +17,7 @@ const components = {
 
 const data = function() {
   return {
-    accounts: [],
+    accounts: [{address:"su"}],
     search: ''
   }
 }
