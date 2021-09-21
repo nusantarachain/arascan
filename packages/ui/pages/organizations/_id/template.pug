@@ -8,7 +8,7 @@ Dashboard
       .org-detail
         .org-detail__header
           .org-detail__avatar
-            img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+            svg(:data-jdenticon-value="org.address", width="50", height="50")
           .org-detail__identity
             p.org-detail__name
               | {{ org.name }}
@@ -34,11 +34,14 @@ Dashboard
             .col--title Admin
             .col--content
               .user
-                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                svg(:data-jdenticon-value="org.admin._id", width="50", height="50")
                 | {{ org.admin.identity != undefined ? org.admin.identity.display : org.admin._id.shorty() }}
           .row.row--no-border
             .col--title Members
             .col--content.members
               .user(v-for="(member, index) in org.members", :key="index")
-                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                svg(:data-jdenticon-value="member._id", width="50", height="50")
                 | {{ member.identity != undefined ? member.identity.display : member._id.shorty() }}
+    script(src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.1/dist/jdenticon.min.js", integrity="sha384-l0/0sn63N3mskDgRYJZA6Mogihu0VY3CusdLMiwpJ9LFPklOARUcOiWEIGGmFELx", crossorigin="anonymous")
+    script. 
+      setTimeout(function(){ jdenticon(); }, 2000);

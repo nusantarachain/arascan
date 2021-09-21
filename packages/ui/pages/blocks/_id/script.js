@@ -1,12 +1,11 @@
 import { Nuchain, WsProvider } from "nuchain-api";
 import moment from "moment";
+import io from "socket.io-client";
 
 import Dashboard from '~/layouts/dashboard/index.vue'
 import Icon from '~/components/Icon/index.vue'
 import Tabs from '~/components/Tabs/index.vue'
 import ApiService from "~/modules/arascan";
-
-const NUCHAIN_WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'wss://id.node.nuchain.network';
 
 const components = {
   Dashboard,
@@ -16,10 +15,11 @@ const components = {
 
 const data = function() {
   return {
+    isFinalized: false,
     block: {
-      number: '',
+      number: 0,
       timestamp: '',
-      status: '',
+      status: 'Unfinalized',
       hash: '',
       parent_hash: '',
       validator: '',
@@ -41,8 +41,17 @@ const data = function() {
 }
 
 const mounted = function() {
+  ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchBlock(this.$route.params.id);
   this.fetchDetail(this.$route.params.id);
+
+  const socket = io(this.$config.baseUrl, { path: '/socket' });
+
+  socket.on('new_block', (message) => {
+      message = JSON.parse(message);
+      this.isFinalized = message.data.finalized.number >= this.block.number && this.block.number > 0;
+      this.block.status = this.isFinalized ? 'Finalized' : 'Unfinalized';
+  });
 }
 
 const methods = {
@@ -53,9 +62,10 @@ const methods = {
           this.block = {
             number: block._id,
             timestamp: new Date(block.extrinsics[0].method.args.now).toUTCString(),
-            status: 'finalized',
+            status: 'Unfinalized',
             hash: block.block_hash,
             parent_hash: block.block_parent_hash,
+            parent_hash_link: `/blocks/${block._id - 1}`,
             validator: '-',
             blocktime: moment(block.extrinsics[0].method.args.now).fromNow() 
           }
@@ -66,7 +76,7 @@ const methods = {
   },
 
   fetchDetail(block) {
-    Nuchain.connectApi({provider: new WsProvider(NUCHAIN_WS_SOCKET_URL)})
+    Nuchain.connectApi({provider: new WsProvider(this.$config.nuchainSocketUrl)})
       .then((api) => {
         api.rpc.chain.getBlockHash(block)
           .then((blockHash) => {
@@ -78,7 +88,7 @@ const methods = {
                   const { method: { args, method, section } } = ex;
                   console.log(`${section}.${method}(${args.map((a) => a.toString()).join(', ')})`);
                   if (section != 'timestamp' && section != 'authorship') {
-                    countindex = index + 1;
+                    countindex = countindex + 1;
                     extrinsics.push({
                       id: `${block}-${index}`,
                       hash: '-',
@@ -102,6 +112,11 @@ const methods = {
                     count: 0
                   }
                 ];
+              });
+
+              api.derive.chain.getHeader(blockHash)
+              .then((header) => {
+                this.block.validator = header.author
               });
           });
       })

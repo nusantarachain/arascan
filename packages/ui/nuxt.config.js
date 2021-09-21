@@ -1,6 +1,6 @@
 export default {
   server: {
-    host: '0',
+    //host: '0',
     port: 3001,
   },
 
@@ -60,5 +60,11 @@ export default {
         ["@babel/plugin-proposal-private-property-in-object", { "loose": true }]
       ]
     }
+  },
+
+  publicRuntimeConfig: {
+    baseUrl: process.env.VUE_APP_BASE_URL || 'http://127.0.0.1:8089',
+    apiUrl: process.env.VUE_APP_API_URL || 'http://127.0.0.1:8089',
+    nuchainSocketUrl: process.env.VUE_APP_NUCHAIN_SOCKET_URL || 'wss://testnet.nuchain.riset.tech'
   }
 }

@@ -17,12 +17,13 @@ const components = {
 
 const data = function() {
   return {
-    accounts: [],
+    accounts: [{address:"su"}],
     search: ''
   }
 }
 
 const created = function() {
+  ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchAccounts();
 }
 

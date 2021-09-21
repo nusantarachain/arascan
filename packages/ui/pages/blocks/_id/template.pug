@@ -2,7 +2,7 @@ Dashboard
   template(v-slot:content)
     .container
       .page__title
-        a(href="/")
+        a(href="/blocks")
           AIcon(type="arrow-left", alt="")
           | Block Detail
       .block-detail
@@ -15,7 +15,9 @@ Dashboard
             .col--title Status
             .col--content
             | : 
-            AIcon.head-icon(type="check", alt="")
+            AIcon.head-icon(type="check", alt="", v-if="isFinalized")
+            .pr-2.pl-2(v-if="!isFinalized")
+              img(src="~/assets/images/pending.png", width="20", height="20")
             | {{ block.status }}
           .row
             .col--title Hash
@@ -26,13 +28,14 @@ Dashboard
                 AIcon.tail-icon.arascan-icon--gray(id="icon-clipboard", type="clipboard", alt="", @click.native="copyToClipboard('.has-tooltip', '#icon-clipboard')")
           .row
             .col--title Parent Hash
-            .col--content : {{ block.parent_hash }}
+            .col--content :
+              a(:href="block.parent_hash_link") &nbsp; {{ block.parent_hash }}
           .row
             .col--title Validator
             .col--content
               | : 
               .user
-                img(src="~/assets/images/image-avatar-org.svg", alt="Avatar Organization")
+                svg(:data-jdenticon-value="block.validator", width="30", height="30")
                 | {{ block.validator }}
                 span.has-tooltip-validator
                   .tooltip Copied!
@@ -41,7 +44,7 @@ Dashboard
             .col--title Blocktime
             .col--content : {{ block.blocktime }}
       Tabs(v-model="currentTab", :tabs="tabs")
-        .s(v-if="currentTab === 1")
+        .s(v-show="currentTab === 1")
           .extrinsics-table
             .thead.trow.trow--colored
               .tcol ID
@@ -67,11 +70,11 @@ Dashboard
                     .col--title  {{ extContent.key }}
                     .col--content {{ extContent.value }}
             .tactions.trow.trow--colored
-        .comments(v-if="currentTab === 2")
+        .comments(v-show="currentTab === 2")
           div.p-8(id="disqus_thread")
             script.
               var disqus_config = function () {
-                this.page.url = "http://localhost:3001/blocks/{{ block.number }}";
+                this.page.url = "{{ $config.baseUrl }}/blocks/{{ block.number }}";
                 this.page.identifier = {{ block.number }};
               };
           
@@ -83,3 +86,6 @@ Dashboard
               })();
             noscript
               | Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+    script(src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.1/dist/jdenticon.min.js", integrity="sha384-l0/0sn63N3mskDgRYJZA6Mogihu0VY3CusdLMiwpJ9LFPklOARUcOiWEIGGmFELx", crossorigin="anonymous")
+    script. 
+      setTimeout(function(){ jdenticon(); }, 5000);

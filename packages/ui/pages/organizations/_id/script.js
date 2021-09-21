@@ -10,8 +10,6 @@ Object.assign(String.prototype, {
   }
 });
 
-const NUCHAIN_WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'wss://id.node.nuchain.network';
-
 const components = {
   Dashboard,
   AIcon: Icon
@@ -34,6 +32,7 @@ const data = function() {
 }
 
 const created = function() {
+  ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchOrganization(this.$route.params.id);
   this.fetchBalance(this.$route.params.id);
 }
@@ -61,11 +60,11 @@ const methods = {
   },
 
   fetchBalance(addr) {
-    Nuchain.connectApi({provider: new WsProvider(NUCHAIN_WS_SOCKET_URL)})
+    Nuchain.connectApi({provider: new WsProvider(this.$config.nuchainSocketUrl)})
       .then((api) => {
         api.query.system.account(addr)
           .then((result) => {
-            this.org.balance = `${result.data.free / 10000000000} ARA`
+            this.org.balance = `${(result.data.free / 10000000000).toFixed(4)} ARA`
           });
       })
       .catch((e) => {
