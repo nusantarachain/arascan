@@ -5,16 +5,19 @@ import io from "socket.io-client";
 import Dashboard from '~/layouts/dashboard/index.vue'
 import Icon from '~/components/Icon/index.vue'
 import Tabs from '~/components/Tabs/index.vue'
+import Identicon from '~/components/Identicon/index.vue'
 import ApiService from "~/modules/arascan";
 
 const components = {
   Dashboard,
   AIcon: Icon,
-  Tabs
+  Tabs,
+  Identicon
 }
 
 const data = function() {
   return {
+    isAvailable: false,
     isFinalized: false,
     block: {
       number: 0,
@@ -117,6 +120,7 @@ const methods = {
               api.derive.chain.getHeader(blockHash)
               .then((header) => {
                 this.block.validator = header.author
+                this.isAvailable = true;
               });
           });
       })
