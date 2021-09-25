@@ -1,6 +1,7 @@
 import Dashboard from '~/layouts/dashboard/index.vue'
 import Icon from '~/components/Icon/index.vue'
 import Input from '~/components/Input/index.vue'
+import Identicon from '~/components/Identicon/index.vue'
 import ApiService from "~/modules/arascan";
 
 Object.assign(String.prototype, {
@@ -12,12 +13,13 @@ Object.assign(String.prototype, {
 const components = {
   Dashboard,
   AIcon: Icon,
-  AInput: Input
+  AInput: Input,
+  Identicon
 }
 
 const data = function() {
   return {
-    accounts: [{address:"su"}],
+    accounts: [],
     search: ''
   }
 }

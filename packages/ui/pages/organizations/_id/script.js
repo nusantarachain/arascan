@@ -2,6 +2,7 @@ import { Nuchain, WsProvider } from "nuchain-api";
 
 import Dashboard from '~/layouts/dashboard/index.vue'
 import Icon from '~/components/Icon/index.vue'
+import Identicon from '~/components/Identicon/index.vue'
 import ApiService from "~/modules/arascan";
 
 Object.assign(String.prototype, {
@@ -12,11 +13,13 @@ Object.assign(String.prototype, {
 
 const components = {
   Dashboard,
-  AIcon: Icon
+  AIcon: Icon,
+  Identicon
 }
 
 const data = function() {
   return {
+    isAvailable: false,
     org: {
       name: "",
       address: "",
@@ -31,7 +34,7 @@ const data = function() {
   }
 }
 
-const created = function() {
+const mounted = function() {
   ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchOrganization(this.$route.params.id);
   this.fetchBalance(this.$route.params.id);
@@ -52,7 +55,9 @@ const methods = {
             balance: "_ ARA",
             admin: organization.admin,
             members: organization.members
-          }
+          };
+
+          this.isAvailable = true;
       })
       .catch((e) => {
           console.log(e);
@@ -97,6 +102,6 @@ const methods = {
 export default {
   components,
   data,
-  created,
+  mounted,
   methods
 }

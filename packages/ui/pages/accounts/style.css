@@ -123,7 +123,6 @@
   }
 
   & .org-detail__name {
-    @apply uppercase;
     @apply text-gray-dark;
     @apply flex;
     @apply items-center;

@@ -5,10 +5,10 @@ Dashboard
         a(href="/accounts")
           AIcon(type="arrow-left", alt="")
           | Detail Account
-      .account-detail
+      .account-detail(v-if="isAvailable")
         .account-detail__header
           .account-detail__avatar
-            svg(:data-jdenticon-value="account.address", width="50", height="50")
+            Identicon(:address="account.address", :size="50")
           .account-detail__identity
             p.account-detail__name
               | {{ account.address }}
@@ -83,6 +83,3 @@ Dashboard
               })();
             noscript
               | Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
-    script(src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.1/dist/jdenticon.min.js", integrity="sha384-l0/0sn63N3mskDgRYJZA6Mogihu0VY3CusdLMiwpJ9LFPklOARUcOiWEIGGmFELx", crossorigin="anonymous")
-    script. 
-      setTimeout(function(){ jdenticon(); }, 2000);

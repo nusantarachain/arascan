@@ -3,17 +3,20 @@ import moment from "moment";
 import Dashboard from '~/layouts/dashboard/index.vue';
 import Icon from '~/components/Icon/index.vue';
 import Tabs from '~/components/Tabs/index.vue';
+import Identicon from '~/components/Identicon/index.vue'
 
 import ApiService from "~/modules/arascan";
 
 const components = {
   Dashboard,
   AIcon: Icon,
-  Tabs
+  Tabs,
+  Identicon
 }
 
 const data = function() {
   return {
+    isAvailable: false,
     account: {
       address: '',
       balance: { free: 0 }
@@ -33,7 +36,7 @@ const data = function() {
   }
 }
 
-const created = function() {
+const mounted = function() {
   ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchAccount(this.$route.params.id);
   this.fetchActivities(this.$route.params.id);
@@ -49,6 +52,7 @@ const methods = {
             balance: account.balance,
             identity: account.identity
           }
+          this.isAvailable = true;
       })
       .catch((e) => {
           console.log(e);
@@ -117,6 +121,6 @@ const methods = {
 export default {
   components,
   data,
-  created,
+  mounted,
   methods
 }

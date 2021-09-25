@@ -16,14 +16,11 @@ Dashboard
             .org-detail
               .org-detail__header
                 .org-detail__avatar
-                  svg(:data-jdenticon-value="account.address", width="50", height="50")
+                  Identicon(:address="account.address", :size="50")
                 .org-detail__identity 
                   p.org-detail__name
                     a(:href="account.link") 
                       | {{ account.name }}
                   p.org-detail__id
                     | {{ account.balance }} ARA
-    script(src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.1/dist/jdenticon.min.js", integrity="sha384-l0/0sn63N3mskDgRYJZA6Mogihu0VY3CusdLMiwpJ9LFPklOARUcOiWEIGGmFELx", crossorigin="anonymous")
-    script. 
-      setTimeout(function(){ jdenticon(); }, 2000);
       
