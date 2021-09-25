@@ -260,7 +260,7 @@ function getEvents(req: any, res: any, next: any) {
 }
 
 async function queryStats(db: any) {
-  const accountCount = await db.collection('accounts').countDocuments({});
+  const accountCount = await db.collection('accounts').countDocuments({"created_ts":{$exists:true}});
   const eventCount = await db.collection('events').countDocuments({});
   const organizationCount = await db.collection('organizations').countDocuments({});
   const productCount = await db.collection('products').countDocuments({});
