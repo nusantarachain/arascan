@@ -6,9 +6,9 @@ Dashboard
           AIcon(type="arrow-left", alt="")
           | Organizations Detail
       .org-detail
-        .org-detail__header
+        .org-detail__header(v-if="isAvailable")
           .org-detail__avatar
-            svg(:data-jdenticon-value="org.address", width="50", height="50")
+            Identicon(:address="org.address", :size="50")
           .org-detail__identity
             p.org-detail__name
               | {{ org.name }}
@@ -32,16 +32,13 @@ Dashboard
             .col--content {{ org.balance }}
           .row
             .col--title Admin
-            .col--content
+            .col--content(v-if="isAvailable")
               .user
-                svg(:data-jdenticon-value="org.admin._id", width="50", height="50")
+                Identicon(:address="org.admin._id", :size="50")
                 | {{ org.admin.identity != undefined ? org.admin.identity.display : org.admin._id.shorty() }}
           .row.row--no-border
             .col--title Members
             .col--content.members
               .user(v-for="(member, index) in org.members", :key="index")
-                svg(:data-jdenticon-value="member._id", width="50", height="50")
+                Identicon(:address="member._id", :size="50")
                 | {{ member.identity != undefined ? member.identity.display : member._id.shorty() }}
-    script(src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.1/dist/jdenticon.min.js", integrity="sha384-l0/0sn63N3mskDgRYJZA6Mogihu0VY3CusdLMiwpJ9LFPklOARUcOiWEIGGmFELx", crossorigin="anonymous")
-    script. 
-      setTimeout(function(){ jdenticon(); }, 2000);
