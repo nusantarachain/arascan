@@ -16,7 +16,7 @@ import { WsProvider } from '@polkadot/api';
 import { Nuchain } from '@arascan/components';
 //import type { Hash } from '@polkadot/types/interfaces';
 import { MongoClient } from 'mongodb';
-import { Context, getLastBlock, processBlock } from '@arascan/components';
+import { Context, getLastStartingBlock, processBlock } from '@arascan/components';
 
 require('dotenv').config();
 
@@ -42,12 +42,27 @@ class Counter {
 const MAX_SKIP_BLOCKS = 50;
 const noSkipLimit = process.argv.indexOf('--no-skip-limit') > -1;
 const seqAll = process.argv.indexOf('--all') > -1;
+const seqContinue = process.argv.indexOf('--continue') > -1;
 
-async function startSequencing(ctx: Context, blockHash: any, untilBlockNum: number, counter: Counter, done: () => void) {
+async function startSequencing(
+    ctx: Context,
+    blockHash: any,
+    untilBlockNum: number,
+    counter: Counter,
+    done: () => void
+) {
     const { api } = ctx;
 
     const block = await api.rpc.chain.getBlock(blockHash);
-    const { block: { header: { parentHash, number, hash } } } = block;
+    if (!block) {
+        console.log('Cannot get block with hash ', blockHash);
+        return;
+    }
+    const {
+        block: {
+            header: { parentHash, number, hash },
+        },
+    } = block;
     const blockNumber = number.toNumber();
 
     await processBlock(ctx, hash, true, (skipped) => {
@@ -55,14 +70,23 @@ async function startSequencing(ctx: Context, blockHash: any, untilBlockNum: numb
             counter.incSkipped();
         } else {
             counter.incProceed();
+
+            // save latest processed block, to resume when something went wrong during sequencing.
+            ctx.db
+                .collection('processed')
+                .updateOne({ _id: 'last_block' }, { $set: { value: block.toJSON() } }, { upsert: true });
         }
-        if ((blockNumber > 2 && blockNumber > untilBlockNum && counter.skipped < MAX_SKIP_BLOCKS)
-            || (noSkipLimit && seqAll)) {
-            setTimeout(async () => await startSequencing(ctx, parentHash,
-                untilBlockNum, counter, done), 10);
+        if (
+            (blockNumber > 2 && blockNumber > untilBlockNum && counter.skipped < MAX_SKIP_BLOCKS) ||
+            noSkipLimit ||
+            seqAll
+        ) {
+            setTimeout(async () => await startSequencing(ctx, parentHash, untilBlockNum, counter, done), 10);
         } else {
             if (counter.skipped >= MAX_SKIP_BLOCKS) {
-                console.log(`Sequencing stoped by max skip blocks ${MAX_SKIP_BLOCKS}, total ${counter.proceed} proceed.`);
+                console.log(
+                    `Sequencing stopped by max skip blocks ${MAX_SKIP_BLOCKS}, total ${counter.proceed} proceed.`
+                );
             } else {
                 console.log(`Sequencing finished, ${counter.proceed} proceed, ${counter.skipped} skipped.`);
             }
@@ -72,86 +96,94 @@ async function startSequencing(ctx: Context, blockHash: any, untilBlockNum: numb
 }
 
 async function main() {
-    console.log("STARTING SEQUENCER...");
+    console.log('STARTING SEQUENCER...');
 
     const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 
-    const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944'
+    const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944';
 
     console.log(`Using WS address: ${WS_SOCKET_URL}`);
 
-    // const api = await ApiPromise.create({
-    //     provider: new WsProvider(WS_SOCKET_URL),
-    //     types: {
-    //         Address: 'MultiAddress',
-    //         LookupSource: 'MultiAddress'
-    //     }
-    // });
-    const api = await Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)});
+    const api = await Nuchain.connectApi({ provider: new WsProvider(WS_SOCKET_URL) });
 
-    console.log(`${process.argv}`)
+    console.log(`${process.argv}`);
 
-    let startingBlockNumber = process.argv.find(a => a.startsWith("--starting-block="));
+    let startingBlockNumber = process.argv.find((a) => a.startsWith('--starting-block='));
 
-    let startingBlockHash = (await api.rpc.chain.getBlockHash());
+    let startingBlockHash = await api.rpc.chain.getBlockHash();
     let startingBlock: any = null;
 
     if (startingBlockNumber) {
-        startingBlockNumber = startingBlockNumber.split("=")[1];
-        startingBlockHash = (await api.rpc.chain.getBlockHash(startingBlockNumber));
+        startingBlockNumber = startingBlockNumber.split('=')[1];
+        startingBlockHash = await api.rpc.chain.getBlockHash(startingBlockNumber);
         console.log(`Using user specified starting block [${startingBlockNumber}] ${startingBlockHash}`);
-    } else {
-        console.log(`Using latest block ${startingBlockHash}`);
     }
-    startingBlock = (await api.rpc.chain.getHeader(startingBlockHash));
+    if (!seqContinue) {
+        console.log(`Using latest block ${startingBlockHash}`);
+        startingBlock = await api.rpc.chain.getHeader(startingBlockHash);
+    }
 
     MongoClient.connect(dbUri, async (err, client: MongoClient) => {
-
-        console.log(`Start sequencing ${err} ...`);
+        if (err) {
+            console.log(`Cannot connect to Mongodb. ${err}`);
+            return;
+        }
 
         if (err == null) {
-            const db = client.db("nuchain");
+            const db = client.db('nuchain');
+
+            if (seqContinue) {
+                // continue sequencing from latest processed block
+                startingBlock = (await db.collection('processed').findOne({ _id: 'last_block' }))?.value;
+            }
+
+            if (startingBlock == null) {
+                console.log('Unknown starting block');
+                return;
+            }
+
+            console.log(`Start sequencing from block #${startingBlock.number}...`);
 
             let untilBlock = 0;
-            if (!seqAll) {
-                const lastProcBlock = (await getLastBlock(db))?.value;
+            if (!seqAll && !seqContinue) {
+                const lastProcBlock = (await getLastStartingBlock(db))?.value;
                 if (lastProcBlock != null) {
-                    console.log(`starting block [${startingBlock.number}] until block: [${lastProcBlock.number}] ${lastProcBlock.hash}`);
+                    console.log(
+                        `starting block [${startingBlock.number}] until block: [${lastProcBlock.number}] ${lastProcBlock.hash}`
+                    );
                     untilBlock = lastProcBlock.number;
                 }
             }
 
             const ctx = new Context(api, db, client);
 
-            // await processBlock(ctx, header.hash, untilBlockHash);
             const counter = new Counter(0);
 
             await startSequencing(ctx, startingBlock.hash, untilBlock, counter, () => {
-
-                console.log("Setting last processed block");
+                console.log('Setting last processed block');
 
                 const data = startingBlock.toJSON();
                 data['hash'] = startingBlockHash.toHex() as any;
 
-                db.collection("processed").updateOne({ '_id': 'last_block' },
-                    { '$set': { 'value': data } }, { 'upsert': true });
+                db.collection('processed').updateOne(
+                    { _id: 'last_starting_block' },
+                    { $set: { value: data } },
+                    { upsert: true }
+                );
 
-                console.log("Done.");
+                console.log('Done.');
 
                 client.close();
                 process.exit(0);
             });
-
 
             process.on('SIGINT', (_code) => {
-                console.log("quiting...");
+                console.log('quiting...');
                 client.close();
                 process.exit(0);
             });
-
         }
     });
 }
-
 
 main().catch(console.error);
