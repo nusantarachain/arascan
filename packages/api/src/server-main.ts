@@ -15,9 +15,9 @@
 import { MongoClient, Db } from 'mongodb';
 import { isHex, toNumber } from '@arascan/components';
 import { WsProvider } from '@polkadot/api';
-import { Server as IOServer } from "socket.io";
-import * as restify from "restify";
-import { Nuchain } from "@arascan/components";
+import { Server as IOServer } from 'socket.io';
+import * as restify from 'restify';
+import { Nuchain } from '@arascan/components';
 
 require('dotenv').config();
 
@@ -59,7 +59,7 @@ function getAccounts(req: any, res: any, next: any) {
   let filter = {};
   if (req.query.search) {
     filter['$text'] = {
-      '$search': req.query.search
+      $search: req.query.search,
     };
   }
 
@@ -240,7 +240,7 @@ function getEvents(req: any, res: any, next: any) {
   let filter = {};
   if (req.query.search) {
     filter['$text'] = {
-      '$search': req.query.search
+      $search: req.query.search,
     };
   }
 
@@ -265,7 +265,11 @@ async function queryStats(db: any) {
   const organizationCount = await db.collection('organizations').countDocuments({});
   const productCount = await db.collection('products').countDocuments({});
   const certificateCount = await db.collection('certificates').countDocuments({});
-  const { era, session, validators, runtimeVersion, nodes } = await db.collection('metadata').findOne({ _id: 'stats' });
+  const stats = await db.collection('metadata').findOne({ _id: 'stats' });
+  if (!stats) {
+    return {};
+  }
+  const { era, session, validators, runtimeVersion, nodes } = stats;
 
   return {
     accounts: accountCount,
@@ -277,7 +281,7 @@ async function queryStats(db: any) {
     session,
     validators,
     runtimeVersion,
-    nodes
+    nodes,
   };
 }
 
@@ -329,9 +333,8 @@ function getOrganizationOne(req: any, res: any, next: any) {
           res.send({ result });
         } else {
           if (result.members != undefined) {
-            db
-              .collection('accounts')
-              .find({ _id: {'$in': result.members }})
+            db.collection('accounts')
+              .find({ _id: { $in: result.members } })
               .toArray((err: any, members: Array<any>) => {
                 if (err == null) {
                   for (var member of members) {
@@ -339,15 +342,14 @@ function getOrganizationOne(req: any, res: any, next: any) {
                       result.admin = member;
                     }
                   }
-            
-                  result.members = members
+
+                  result.members = members;
                   res.send({ result });
                 }
               });
           } else {
-            db
-              .collection('accounts')
-              .find({ _id: {'$in': [result.admin] }})
+            db.collection('accounts')
+              .find({ _id: { $in: [result.admin] } })
               .toArray((err: any, members: Array<any>) => {
                 if (err == null) {
                   for (var member of members) {
@@ -355,12 +357,12 @@ function getOrganizationOne(req: any, res: any, next: any) {
                       result.admin = member;
                     }
                   }
-  
-                  result.members = members
+
+                  result.members = members;
                   res.send({ result });
                 }
               });
-            }
+          }
         }
       });
   }).done(next);
@@ -377,7 +379,7 @@ function getOrganizations(req: any, res: any, next: any) {
   let filter = {};
   if (req.query.search) {
     filter['$text'] = {
-      '$search': req.query.search
+      $search: req.query.search,
     };
   }
 
@@ -406,7 +408,7 @@ function getTransfers(req: any, res: any, next: any) {
     return next();
   }
 
-  let filter = { $or: [{ src: addr }, { dst: addr }] }
+  let filter = { $or: [{ src: addr }, { dst: addr }] };
 
   withDb((db, _client) => {
     db.collection('transfers')
@@ -432,16 +434,16 @@ server.use(function crossOrigin(_req: any, res: any, next: any) {
 });
 
 const io = new IOServer(server.server, {
-  path: "/socket",
+  path: '/socket',
   cors: {
-    origin: "*"
-  }
+    origin: '*',
+  },
 });
 
-io.on("connection", (socket) => {
-  console.log("Connect to client");
-  socket.on('disconnect', function() {
-    console.log("Disconnect");
+io.on('connection', (socket) => {
+  console.log('Connect to client');
+  socket.on('disconnect', function () {
+    console.log('Disconnect');
   });
 });
 
@@ -457,89 +459,87 @@ const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944'
 
 console.log(`Using WS socket address: ${WS_SOCKET_URL}`);
 
-Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)})
-  .then((api) => {
-    api.rpc.chain.subscribeNewHeads(async (head: any) => {
-      const blockHash = await api.rpc.chain.getBlockHash(head.number);
-      const finalizedBlockHash = await api.rpc.chain.getFinalizedHead();
-      const finalizedBlockHead = await api.rpc.chain.getHeader(finalizedBlockHash);
+Nuchain.connectApi({ provider: new WsProvider(WS_SOCKET_URL) }).then((api) => {
+  api.rpc.chain.subscribeNewHeads(async (head: any) => {
+    const blockHash = await api.rpc.chain.getBlockHash(head.number);
+    const finalizedBlockHash = await api.rpc.chain.getFinalizedHead();
+    const finalizedBlockHead = await api.rpc.chain.getHeader(finalizedBlockHash);
 
-      wsSend(io, 'new_block', {
-        data: {
-          best: {
-            number: head.number.toNumber(),
-            hash: blockHash,
-          },
-
-          finalized: {
-            number: finalizedBlockHead.number.toNumber(),
-            hash: finalizedBlockHash,
-          },
+    wsSend(io, 'new_block', {
+      data: {
+        best: {
+          number: head.number.toNumber(),
+          hash: blockHash,
         },
-      });
 
-      withDb(async (db, _client) => {
-        wsSend(io, 'stats', {
-          data: await queryStats(db),
-        });
-      });
-
+        finalized: {
+          number: finalizedBlockHead.number.toNumber(),
+          hash: finalizedBlockHash,
+        },
+      },
     });
-    
-    let lastBlock = 0;
-    let lastBlockEvent = 0;
-    function fetchBlock() {
-      setTimeout(function () {
-          let filter = {};
-          let filterEvent = {};
-          if (lastBlock != 0) {
-            filter = { _id: { '$gt': lastBlock }};
-          }
 
-          if (lastBlockEvent != 0) {
-            filterEvent = { block: { '$gt': lastBlockEvent }}
-          }
+    withDb(async (db, _client) => {
+      wsSend(io, 'stats', {
+        data: await queryStats(db),
+      });
+    });
+  });
 
-          withDb((db, _client) => {
-            db.collection('blocks')
-              .find(filter)
-              .sort({ _id: -1 })
-              .limit(10)
-              .toArray((err: any, result: Array<any>) => {
-                if (err == null && result[0] != undefined) {
-                  lastBlock = result[0]._id;
-                  wsSend(io, 'summary_block', {
-                    data: {
-                      blocks: result
-                    },
-                  });
-                }
+  let lastBlock = 0;
+  let lastBlockEvent = 0;
+  function fetchBlock() {
+    setTimeout(function () {
+      let filter = {};
+      let filterEvent = {};
+      if (lastBlock != 0) {
+        filter = { _id: { $gt: lastBlock } };
+      }
+
+      if (lastBlockEvent != 0) {
+        filterEvent = { block: { $gt: lastBlockEvent } };
+      }
+
+      withDb((db, _client) => {
+        db.collection('blocks')
+          .find(filter)
+          .sort({ _id: -1 })
+          .limit(10)
+          .toArray((err: any, result: Array<any>) => {
+            if (err == null && result[0] != undefined) {
+              lastBlock = result[0]._id;
+              wsSend(io, 'summary_block', {
+                data: {
+                  blocks: result,
+                },
               });
-            
-            db.collection('events')
-              .find(filterEvent)
-              .sort({ block: -1 })
-              .limit(10)
-              .toArray((err: any, result: Array<any>) => {
-                if (err == null && result[0] != undefined) {
-                  lastBlockEvent = result[0].block;
-                  wsSend(io, 'summary_event', {
-                    data: {
-                      events: result
-                    },
-                  });
-                }
-              });
-
-            return Promise.resolve();
+            }
           });
 
-          fetchBlock();
-      }, 3000);
-    }
+        db.collection('events')
+          .find(filterEvent)
+          .sort({ block: -1 })
+          .limit(10)
+          .toArray((err: any, result: Array<any>) => {
+            if (err == null && result[0] != undefined) {
+              lastBlockEvent = result[0].block;
+              wsSend(io, 'summary_event', {
+                data: {
+                  events: result,
+                },
+              });
+            }
+          });
 
-    fetchBlock();
-  });
+        return Promise.resolve();
+      });
+
+      fetchBlock();
+    }, 3000);
+  }
+
+  fetchBlock();
+});
 
 server.get('/account/:addr/transfers', getAccountTransfers);
 server.get('/account/:addr/staking_txs', getAccountStakingTxs);

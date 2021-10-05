@@ -8,40 +8,29 @@
             "type": "node",
             "request": "launch",
             "name": "Headwatcher",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}/packages/headwatcher/src/main.ts",
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ],
+            "outFiles": ["${workspaceFolder}/**/*.js"],
             "preLaunchTask": "npm: build"
         },
         {
             "type": "node",
             "request": "launch",
             "name": "Sequencer",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}/packages/sequencer/src/main.ts",
-            "args": ["--starting-block=43"],
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ],
+            "args": ["--starting-block=240000"],
+            "outFiles": ["${workspaceFolder}/**/*.js"],
             "preLaunchTask": "npm: build"
         },
         {
             "type": "node",
             "request": "launch",
             "name": "API Server",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
+            "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/packages/api/src/server-main.ts",
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ],
+            "outFiles": ["${workspaceFolder}/**/*.js"],
             "preLaunchTask": "npm: build"
         }
     ]

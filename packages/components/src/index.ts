@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiPromise } from '@polkadot/api';
-import { default as types } from './types';
+// import { ApiPromise } from '@polkadot/api';
+// import { default as types } from './types';
+
+import { Nuchain } from "nuchain-api";
 
 export * from './main';
 
-const Nuchain = {
-  connectApi: async (opts: {}) => {
-    return await ApiPromise.create({ ...opts, types: types });
-  },
-};
+// const Nuchain = {
+//   connectApi: async (opts: {}) => {
+//     return await ApiPromise.create({ ...opts, types: types });
+//   },
+// };
 
-export { Nuchain, types };
+export { Nuchain };

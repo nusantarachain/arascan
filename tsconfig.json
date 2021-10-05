@@ -1,18 +1,13 @@
 {
+  "extends": "./tsconfig.base.json",
   "files": [],
   "references": [
     { "path": "./packages/components/src" },
-    { "path": "./packages/components/test" },
 
     { "path": "./packages/api/src" },
-    { "path": "./packages/api/test" },
 
     { "path": "./packages/headwatcher/src" },
-    { "path": "./packages/headwatcher/test" },
 
-    { "path": "./packages/sequencer/src" },
-    { "path": "./packages/sequencer/test" },
-
-    { "path": "./packages/ui" }
+    { "path": "./packages/sequencer/src" }
   ]
 }

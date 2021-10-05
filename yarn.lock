@@ -2905,7 +2905,7 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/bson@*":
+"@types/bson@*", "@types/bson@^4.2.0":
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/@types/bson/-/bson-4.2.0.tgz#a2f71e933ff54b2c3bf267b67fa221e295a33337"
   integrity sha512-ELCPqAdroMdcuxqwMgUpifQyRoTpyYCNr1V9xKyF40VsBobsj+BbWNRvwGchMgBPGqkw655ypkjj2MEF5ywVwg==
@@ -10340,6 +10340,11 @@ nuchain-api@0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/nuchain-api/-/nuchain-api-0.1.1.tgz#8d0c6477c382526f0599b0662b313a628972be13"
   integrity sha512-a0xMBMMIddcKmeYOGxSrbINWumB8cNgAKNHvSVrifN2zl2WOtEZHyG1m0ZhV0JeGVy3o5knzQUL+6JNoTuufRg==
+  dependencies:
+    "@polkadot/api" "^4.12.1"
+
+"nuchain-api@file:../nuchain-js-api":
+  version "0.1.1"
   dependencies:
     "@polkadot/api" "^4.12.1"
 
