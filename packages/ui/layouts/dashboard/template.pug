@@ -5,7 +5,7 @@
         img.brand(src="~/assets/images/image-arascan.svg", alt="ARAScan Logo")
       AInput.append-icon.search-input
         form(v-on:submit.prevent="donothing")
-          input(type="text", name="search", placeholder="Search block / hash / account / organization...", v-model="search", v-on:keyup="searchAll")
+          input(type="text", name="search", placeholder="Search block / hash / account / organization...", v-model="search", v-on:keyup="searchAll", :class="searchError")
           AIcon(type="magnify", alt="")
       .user
         p.user__fullname

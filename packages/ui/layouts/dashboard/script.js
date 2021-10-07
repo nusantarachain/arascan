@@ -1,5 +1,6 @@
 import Icon from '~/components/Icon/index.vue'
 import Input from '~/components/Input/index.vue'
+import { isHex } from '@polkadot/util'
 
 import ApiService from "~/modules/arascan";
 
@@ -10,7 +11,8 @@ const components = {
 
 const data = function() {
   return {
-    search: ''
+    search: '',
+    searchError: '',
   }
 }
 
@@ -32,7 +34,9 @@ const methods = {
                 .then((response) => {
                   if (response.data.result) {
                     this.$router.push({ path: `/accounts/${this.search}` }, () => { location.reload(); });
-                  } 
+                  } else {
+                    this.searchNotFound("Block / hash / account / organization not found!");
+                  }
                 })
                 .catch((e) => {
                   console.log(e);
@@ -49,26 +53,37 @@ const methods = {
             if (response.data.result) {
               this.$router.push({ path: `/blocks/${this.search}` }, () => { location.reload(); });
             } else {
-              this.search = "Search Not Found";
+              this.searchNotFound("Block / hash / account / organization not found!");
+            }
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+      } else if(isHex(this.search)) {
+        ApiService.getBlock(this.search)
+          .then((response) => {
+            if (response.data.result) {
+              this.$router.push({ path: `/blocks/${response.data.result._id}` }, () => { location.reload(); });
+            } else {
+              this.searchNotFound("Block / hash / account / organization not found!");
             }
           })
           .catch((e) => {
             console.log(e);
           });
       } else {
-        ApiService.getBlock(this.search)
-          .then((response) => {
-            if (response.data.result) {
-              this.$router.push({ path: `/blocks/${response.data.result._id}` }, () => { location.reload(); });
-            } else {
-              this.search = "Search Not Found";
-            }
-          })
-          .catch((e) => {
-            console.log(e);
-          });
+        this.searchNotFound("Block / hash / account / organization not found!");
       }
     }
+  },
+
+  searchNotFound(message) {
+    this.search = message;
+    this.searchError = "error";
+    setTimeout(() => {
+      this.search = '';
+      this.searchError = '';
+    }, 2000);
   }
 
 }

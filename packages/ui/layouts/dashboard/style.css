@@ -36,6 +36,10 @@
       }
     }
 
+    & .error {
+      color: red;
+    }
+
     & .user {
       @apply flex;
       @apply items-center;
