@@ -202,7 +202,7 @@ const mounted = function() {
           icon: 'nodes',
           title: 'Nodes',
           link: 'https://telemetry.nuchain.network',
-          value: statData.nodes.length
+          value: statData.nodes
         },
         {
           icon: 'blocks',
@@ -296,7 +296,7 @@ const methods = {
               icon: 'nodes',
               title: 'Nodes',
               link: 'https://telemetry.nuchain.network',
-              value: statData.nodes.length
+              value: statData.nodes
             },
             {
               icon: 'blocks',

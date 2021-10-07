@@ -258,7 +258,7 @@ async function updateAccount(ctx: Context, accountId: string, opts: UpdateOption
 async function updateStats(ctx: Context) {
   const { api, db } = ctx;
 
-  const nodes = (await api.rpc.system.peers()).map((a) => a.toHuman());
+  const nodes = (await api.rpc.system.health()).peers.toNumber();
   const runtimeVersion = (api.consts.system.version).specVersion.toNumber();
   const era = (await api.query.staking.currentEra()).unwrap().toNumber();
   const session = (await api.query.session.currentIndex()).toNumber();
