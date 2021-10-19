@@ -28,6 +28,6 @@
     "@types/mongodb": "^3.6.12",
     "crc32": "0.2.2",
     "lodash": "^4.17.21",
-    "nuchain-api": "file:../../../nuchain-js-api"
+    "nuchain-api": "0.1.1"
   }
 }

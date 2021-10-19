@@ -459,7 +459,10 @@ const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944'
 
 console.log(`Using WS socket address: ${WS_SOCKET_URL}`);
 
+var API;
+
 Nuchain.connectApi({ provider: new WsProvider(WS_SOCKET_URL) }).then((api) => {
+  API = api;
   api.rpc.chain.subscribeNewHeads(async (head: any) => {
     const blockHash = await api.rpc.chain.getBlockHash(head.number);
     const finalizedBlockHash = await api.rpc.chain.getFinalizedHead();
@@ -541,6 +544,26 @@ Nuchain.connectApi({ provider: new WsProvider(WS_SOCKET_URL) }).then((api) => {
   fetchBlock();
 });
 
+/// Get total ARA issuance
+async function getTotalIssuance(req: any, res: any, next: any){
+    if (typeof API === 'undefined'){
+        next()
+        return;
+    }
+    let rv = await API.query.balances.totalIssuance();
+    if (req.query.format === 'plain'){
+        res.setHeader('Content-Type', 'text/plain')
+        res.write((rv.toBn() / 10 ** 10).toString());
+        res.end();
+    }else{
+        res.send({
+            result: (rv.toBn() / 10 ** 10)
+        })
+    }
+    next()
+}
+
+
 server.get('/account/:addr/transfers', getAccountTransfers);
 server.get('/account/:addr/staking_txs', getAccountStakingTxs);
 server.get('/account/:addr/rewards_slashes', getAccountStakingRewardsSlashes);
@@ -554,6 +577,7 @@ server.get('/token', getToken);
 server.get('/organization/:addr', getOrganizationOne);
 server.get('/organizations', getOrganizations);
 server.get('/transfers/:addr', getTransfers);
+server.get('/total-issuance', getTotalIssuance);
 
 const listenAll = process.argv.indexOf('--listen-all') > -1;
 
