@@ -18,8 +18,10 @@ Dashboard
           .tcol.tcol--event {{ block.event_counts }}
           .tcol.tcol--event {{ block.ext_counts }}
           .tcol.tcol
-            AIcon.head-icon(type="check", alt="", v-if="block.status=='Finalized'")
-            .pr-2.pl-2.float-left(v-if="block.status!='Finalized'")
-              img(src="~/assets/images/pending.png", width="20", height="20")
-            | {{ block.status }}
+            .flex.flex-row.items-center.justify-start.space-x-2
+              AIcon.head-icon(type="check", alt="", v-if="block.status=='Finalized'")
+              .pr-2.pl-2.float-left(v-if="block.status!='Finalized'")
+                img(src="~/assets/images/pending.png", width="20", height="20")
+              div
+                | {{ block.status }}
           .tcol {{ block.time }}

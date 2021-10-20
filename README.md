@@ -18,7 +18,23 @@ yarn start:sequencer
 
 Parameters:
 
-* `--no-skip-limit` - process without skip limit.
-* `--all` - process all blocks.
+-   `--no-skip-limit` - process without skip limit.
+-   `--all` - process all blocks.
 
+## Development Cycle
 
+Run the database using docker:
+
+```bash
+docker-compose up -d mongodb
+```
+
+## API server
+
+To start API server run the following command:
+
+```bash
+yarn start:api-server
+```
+
+Make sure the database already running and ready to accept connections.
