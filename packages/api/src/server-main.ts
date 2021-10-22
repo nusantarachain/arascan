@@ -23,6 +23,13 @@ require('dotenv').config();
 
 const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 
+const dbName = process.env.MONGODB_DB_NAME;
+
+if (!dbName) {
+  console.log('[ERROR] no MONGODB_DB_NAME env var');
+  throw Error('[ERROR] no MONGODB_DB_NAME env var');
+}
+
 function withDb<T>(callback: (db: Db, client: MongoClient) => Promise<T>) {
   let afterCompleted = () => ({});
   const doner = {
@@ -37,7 +44,7 @@ function withDb<T>(callback: (db: Db, client: MongoClient) => Promise<T>) {
       return;
     }
     try {
-      await callback(client.db('nuchain'), client);
+      await callback(client.db(dbName), client);
     } catch (error) {
       console.log(`[ERROR] ${error}`);
     } finally {

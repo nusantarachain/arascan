@@ -19,66 +19,71 @@ import { Context, updateAccount } from '@arascan/components';
 require('dotenv').config();
 
 class Counter {
-    proceed: number;
-    skipped: number;
-    constructor(proceed: number) {
-        this.proceed = proceed;
-        this.skipped = 0;
-    }
+  proceed: number;
+  skipped: number;
+  constructor(proceed: number) {
+    this.proceed = proceed;
+    this.skipped = 0;
+  }
 
-    incProceed() {
-        this.proceed++;
-        return this;
-    }
+  incProceed() {
+    this.proceed++;
+    return this;
+  }
 
-    incSkipped() {
-        this.skipped++;
-        return this;
-    }
+  incSkipped() {
+    this.skipped++;
+    return this;
+  }
 }
-
 
 async function main() {
-    console.log("Starting Account Updater...");
+  console.log('Starting Account Updater...');
 
-    const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+  const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 
-    const api = await Nuchain.connectApi({});
+  const dbName = process.env.MONGODB_DB_NAME;
 
-    MongoClient.connect(dbUri, async (err, client: MongoClient) => {
-        if (err == null) {
-            const db = client.db("nuchain");
+  if (!dbName) {
+    console.log('[ERROR] no MONGODB_DB_NAME env var');
+    throw Error('db name not set');
+  }
 
-            const ctx = new Context(api, db, client);
+  const api = await Nuchain.connectApi({});
 
-            const counter = new Counter(0);
-            const doner = new Promise((resolve:any)=>{
-                db.collection("accounts").find({})
-                .toArray((err: any, result: Array<any>) => {
-                    if (err == null) {
-                        result.forEach((acc) => {
-                            console.log("processing: ", acc._id)
-                            counter.incProceed();
-                            updateAccount(ctx, acc._id);
-                        })
-                    }
-                    resolve();
-                });
-            })
+  MongoClient.connect(dbUri, async (err, client: MongoClient) => {
+    if (err == null) {
+      const db = client.db(dbName);
 
-            await doner;
+      const ctx = new Context(api, db, client);
 
-            console.log(`Done. ${counter.proceed} proceed.`);
+      const counter = new Counter(0);
+      const doner = new Promise((resolve: any) => {
+        db.collection('accounts')
+          .find({})
+          .toArray((err: any, result: Array<any>) => {
+            if (err == null) {
+              result.forEach((acc) => {
+                console.log('processing: ', acc._id);
+                counter.incProceed();
+                updateAccount(ctx, acc._id);
+              });
+            }
+            resolve();
+          });
+      });
 
-            // process.on('SIGINT', (_code) => {
-                // console.log("quiting...");
-                client.close();
-                process.exit(0);
-            // });
+      await doner;
 
-        }
-    });
+      console.log(`Done. ${counter.proceed} proceed.`);
+
+      // process.on('SIGINT', (_code) => {
+      // console.log("quiting...");
+      client.close();
+      process.exit(0);
+      // });
+    }
+  });
 }
-
 
 main().catch(console.error);
