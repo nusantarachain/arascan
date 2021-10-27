@@ -1,72 +1,71 @@
-import moment from "moment";
-import io from "socket.io-client";
+import moment from 'moment';
 
-import Dashboard from '~/layouts/dashboard/index.vue'
-import WidgedBlock from '~/components/WidgetBlock/index.vue'
-import WidgedList from '~/components/WidgetList/index.vue'
-import Icon from '~/components/Icon/index.vue'
-import LineChart from '~/components/LineChart/index.js'
-import ApiService from "~/modules/arascan";
+import Dashboard from '~/layouts/dashboard/index.vue';
+import WidgedBlock from '~/components/WidgetBlock/index.vue';
+import WidgedList from '~/components/WidgetList/index.vue';
+import Icon from '~/components/Icon/index.vue';
+import LineChart from '~/components/LineChart/index.js';
+import ApiService from '~/modules/arascan';
 
 const components = {
   Dashboard,
   WidgedBlock,
   WidgedList,
   AIcon: Icon,
-  LineChart
-}
+  LineChart,
+};
 
-const data = function() {
+const data = function () {
   return {
     overviews: [
       {
         icon: 'users',
         title: 'Organizations',
         link: '/organizations',
-        value: 0
+        value: 0,
       },
       {
         icon: 'user',
         title: 'Accounts',
         link: '/organizations',
-        value: 0
+        value: 0,
       },
       {
         icon: 'box',
         title: 'Products',
         link: '/',
-        value: 0
+        value: 0,
       },
       {
         icon: 'calendar-check',
         title: 'Events',
         link: '/events',
-        value: 0
+        value: 0,
       },
       {
         icon: 'certificate',
         title: 'Certificates',
         link: '/',
-        value: 0
+        value: 0,
       },
       {
         icon: 'nodes',
         title: 'Nodes',
         link: 'https://telemetry.nuchain.network',
-        value: 0
+        value: 0,
       },
       {
         icon: 'blocks',
         title: 'Validators',
         link: 'https://dashboard.nuchain.network/?rpc=wss%3A%2F%2Fid.node.nuchain.network#/staking',
-        value: 0
+        value: 0,
       },
       {
         icon: 'runtime',
         title: 'Runtime Version',
         link: '/',
-        value: 0
-      }
+        value: 0,
+      },
     ],
     chartData: {
       labels: ['2020', '', '', '2021', '', '', ''],
@@ -80,66 +79,64 @@ const data = function() {
           pointStrokeColor: '#219436',
           pointHighlightFill: '#219436',
           pointHighlightStroke: '#219436',
-          data: [100, 350, 330, 250, 270, 270, 220]
-        }
-      ]
+          data: [100, 350, 330, 250, 270, 270, 220],
+        },
+      ],
     },
     blocks: [
       {
         icon: 'block',
         title: 'Best',
-        value: '0'
+        value: '0',
       },
       {
         icon: 'block',
         title: 'Finalized',
-        value: '0'
-      }
+        value: '0',
+      },
     ],
     recentEvents: [],
-    latestBlocks: []
-  }
-}
+    latestBlocks: [],
+  };
+};
 
-const created = function() {
+const created = function () {
   ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchStat();
   this.fetchEvents();
   this.fetchBlocks();
-}
+};
 
-const mounted = function() {
-  const socket = io(this.$config.baseUrl, { path: '/socket' });
-
-  socket.on('new_block', (message) => {
-      message = JSON.parse(message);
-      this.blocks = [
-        {
-          icon: 'block',
-          title: 'Best',
-          link: '/blocks',
-          value: message.data.best.number
-        },
-        {
-          icon: 'block',
-          title: 'Finalized',
-          link: '/blocks',
-          value: message.data.finalized.number
-        }
-      ];
+const mounted = function () {
+  this.$ws.socket.on('new_block', (message) => {
+    message = JSON.parse(message);
+    this.blocks = [
+      {
+        icon: 'block',
+        title: 'Best',
+        link: '/blocks',
+        value: message.data.best.number,
+      },
+      {
+        icon: 'block',
+        title: 'Finalized',
+        link: '/blocks',
+        value: message.data.finalized.number,
+      },
+    ];
   });
 
-  socket.on('summary_block', (message) => {
+  this.$ws.socket.on('summary_block', (message) => {
     message = JSON.parse(message);
     if (message) {
       message.data.blocks.forEach((block) => {
         this.latestBlocks.unshift({
-          id: Math.random().toString(36).substring(2,7),
+          id: Math.random().toString(36).substring(2, 7),
           title: `#${block._id}`,
           extrinsil: `${block.extrinsics.length} Extrinsics`,
           event: `${block.event_counts} Events`,
           link: `/blocks/${block._id}`,
-          time: moment(block.extrinsics[0].method.args.now).fromNow() 
+          time: moment(block.extrinsics[0].method.args.now).fromNow(),
         });
       });
 
@@ -147,7 +144,7 @@ const mounted = function() {
     }
   });
 
-  socket.on('summary_event', (message) => {
+  this.$ws.socket.on('summary_event', (message) => {
     message = JSON.parse(message);
     if (message) {
       message.data.events.forEach((event) => {
@@ -156,7 +153,7 @@ const mounted = function() {
           title: event.method,
           subtitle: `#${event.block}`,
           link: `/blocks/${event._id}`,
-          time: moment(event.ts).fromNow()
+          time: moment(event.ts).fromNow(),
         });
       });
 
@@ -164,164 +161,163 @@ const mounted = function() {
     }
   });
 
-  socket.on('stats', (message) => {
-      message = JSON.parse(message);
-      const statData = message.data;
-      this.overviews = [
-        {
-          icon: 'users',
-          title: 'Organizations',
-          link: '/organizations',
-          value: statData.organizations
-        },
-        {
-          icon: 'user',
-          title: 'Accounts',
-          link: '/accounts',
-          value: statData.accounts
-        },
-        {
-          icon: 'box',
-          title: 'Products',
-          link: '/',
-          value: statData.products
-        },
-        {
-          icon: 'calendar-check',
-          title: 'Events',
-          link: '/events',
-          value: statData.events
-        },
-        {
-          icon: 'certificate',
-          title: 'Certificates',
-          link: '/',
-          value: statData.certificates
-        },
-        {
-          icon: 'nodes',
-          title: 'Nodes',
-          link: 'https://telemetry.nuchain.network',
-          value: statData.nodes
-        },
-        {
-          icon: 'blocks',
-          title: 'Validators',
-          link: 'https://dashboard.nuchain.network/?rpc=wss%3A%2F%2Fid.node.nuchain.network#/staking',
-          value: statData.validators.length
-        },
-        {
-          icon: 'runtime',
-          title: 'Runtime Version',
-          link: '/',
-          value: statData.runtimeVersion
-        }
-      ];
-  })
-}
+  this.$ws.socket.on('stats', (message) => {
+    message = JSON.parse(message);
+    const statData = message.data;
+    this.overviews = [
+      {
+        icon: 'users',
+        title: 'Organizations',
+        link: '/organizations',
+        value: statData.organizations,
+      },
+      {
+        icon: 'user',
+        title: 'Accounts',
+        link: '/accounts',
+        value: statData.accounts,
+      },
+      {
+        icon: 'box',
+        title: 'Products',
+        link: '/',
+        value: statData.products,
+      },
+      {
+        icon: 'calendar-check',
+        title: 'Events',
+        link: '/events',
+        value: statData.events,
+      },
+      {
+        icon: 'certificate',
+        title: 'Certificates',
+        link: '/',
+        value: statData.certificates,
+      },
+      {
+        icon: 'nodes',
+        title: 'Nodes',
+        link: 'https://telemetry.nuchain.network',
+        value: statData.nodes,
+      },
+      {
+        icon: 'blocks',
+        title: 'Validators',
+        link: 'https://dashboard.nuchain.network/?rpc=wss%3A%2F%2Fid.node.nuchain.network#/staking',
+        value: statData.validators.length,
+      },
+      {
+        icon: 'runtime',
+        title: 'Runtime Version',
+        link: '/',
+        value: statData.runtimeVersion,
+      },
+    ];
+  });
+};
 
 const methods = {
-  
   fetchEvents() {
     return ApiService.getEvents({ limit: 20 })
       .then((response) => {
-          const events = response.data.entries;
-          this.recentEvents = events.map(x => ({
-              id: x._id,
-              title: x.method,
-              link: `/blocks/${x.block}`,
-              subtitle: `#${x.block}`,
-              time: moment(x.ts).fromNow()
-          }));
+        const events = response.data.entries;
+        this.recentEvents = events.map((x) => ({
+          id: x._id,
+          title: x.method,
+          link: `/blocks/${x.block}`,
+          subtitle: `#${x.block}`,
+          time: moment(x.ts).fromNow(),
+        }));
       })
       .catch((e) => {
-          console.log(e);
+        console.log(e);
       });
   },
 
   fetchBlocks() {
     return ApiService.getBlocks({ limit: 22 })
       .then((response) => {
-          const blocks = response.data.entries;
-          this.latestBlocks = blocks.map(x => ({
-              id: `#${x._id}`,
-              title: `#${x._id}`,
-              extrinsil: `${x.extrinsics.length} Extrinsics`,
-              event: `${x.event_counts} Events`,
-              link: `/blocks/${x._id}`,
-              time: moment(x.extrinsics[0].method.args.now).fromNow() 
-          }));
+        const blocks = response.data.entries;
+        this.latestBlocks = blocks.map((x) => ({
+          id: `#${x._id}`,
+          title: `#${x._id}`,
+          extrinsil: `${x.extrinsics.length} Extrinsics`,
+          event: `${x.event_counts} Events`,
+          link: `/blocks/${x._id}`,
+          time: moment(x.extrinsics[0].method.args.now).fromNow(),
+        }));
       })
       .catch((e) => {
-          console.log(e);
+        console.log(e);
       });
   },
 
   fetchStat() {
     return ApiService.getStats()
       .then((response) => {
-          const statData = response.data.result;
-          this.overviews = [
-            {
-              icon: 'users',
-              title: 'Organizations',
-              link: '/organizations',
-              value: statData.organizations
-            },
-            {
-              icon: 'user',
-              title: 'Accounts',
-              link: '/accounts',
-              value: statData.accounts
-            },
-            {
-              icon: 'box',
-              title: 'Products',
-              link: '/',
-              value: statData.products
-            },
-            {
-              icon: 'calendar-check',
-              title: 'Events',
-              link: '/events',
-              value: statData.events
-            },
-            {
-              icon: 'certificate',
-              title: 'Certificates',
-              link: '/',
-              value: statData.certificates
-            },
-            {
-              icon: 'nodes',
-              title: 'Nodes',
-              link: 'https://telemetry.nuchain.network',
-              value: statData.nodes
-            },
-            {
-              icon: 'blocks',
-              title: 'Validators',
-              link: 'https://dashboard.nuchain.network/?rpc=wss%3A%2F%2Fid.node.nuchain.network#/staking',
-              value: statData.validators.length
-            },
-            {
-              icon: 'runtime',
-              title: 'Runtime Version',
-              link: '/',
-              value: statData.runtimeVersion
-            }
-          ];
+        const statData = response.data.result;
+        this.overviews = [
+          {
+            icon: 'users',
+            title: 'Organizations',
+            link: '/organizations',
+            value: statData.organizations,
+          },
+          {
+            icon: 'user',
+            title: 'Accounts',
+            link: '/accounts',
+            value: statData.accounts,
+          },
+          {
+            icon: 'box',
+            title: 'Products',
+            link: '/',
+            value: statData.products,
+          },
+          {
+            icon: 'calendar-check',
+            title: 'Events',
+            link: '/events',
+            value: statData.events,
+          },
+          {
+            icon: 'certificate',
+            title: 'Certificates',
+            link: '/',
+            value: statData.certificates,
+          },
+          {
+            icon: 'nodes',
+            title: 'Nodes',
+            link: 'https://telemetry.nuchain.network',
+            value: statData.nodes,
+          },
+          {
+            icon: 'blocks',
+            title: 'Validators',
+            link: 'https://dashboard.nuchain.network/?rpc=wss%3A%2F%2Fid.node.nuchain.network#/staking',
+            value: statData.validators.length,
+          },
+          {
+            icon: 'runtime',
+            title: 'Runtime Version',
+            link: '/',
+            value: statData.runtimeVersion,
+          },
+        ];
       })
       .catch((e) => {
-          console.log(e);
+        console.log(e);
       });
-  }
-}
+  },
+};
 
 export default {
   components,
   data,
   created,
   mounted,
-  methods
-}
+  methods,
+};

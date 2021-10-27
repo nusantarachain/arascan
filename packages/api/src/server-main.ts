@@ -23,6 +23,13 @@ require('dotenv').config();
 
 const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 
+const dbName = process.env.MONGODB_DB_NAME;
+
+if (!dbName) {
+  console.log('[ERROR] no MONGODB_DB_NAME env var');
+  throw Error('[ERROR] no MONGODB_DB_NAME env var');
+}
+
 function withDb<T>(callback: (db: Db, client: MongoClient) => Promise<T>) {
   let afterCompleted = () => ({});
   const doner = {
@@ -37,7 +44,7 @@ function withDb<T>(callback: (db: Db, client: MongoClient) => Promise<T>) {
       return;
     }
     try {
-      await callback(client.db('nuchain'), client);
+      await callback(client.db(dbName), client);
     } catch (error) {
       console.log(`[ERROR] ${error}`);
     } finally {
@@ -260,7 +267,7 @@ function getEvents(req: any, res: any, next: any) {
 }
 
 async function queryStats(db: any) {
-  const accountCount = await db.collection('accounts').countDocuments({"created_ts":{$exists:true}});
+  const accountCount = await db.collection('accounts').countDocuments({ created_ts: { $exists: true } });
   const eventCount = await db.collection('events').countDocuments({});
   const organizationCount = await db.collection('organizations').countDocuments({});
   const productCount = await db.collection('products').countDocuments({});
@@ -545,24 +552,23 @@ Nuchain.connectApi({ provider: new WsProvider(WS_SOCKET_URL) }).then((api) => {
 });
 
 /// Get total ARA issuance
-async function getTotalIssuance(req: any, res: any, next: any){
-    if (typeof API === 'undefined'){
-        next()
-        return;
-    }
-    let rv = await API.query.balances.totalIssuance();
-    if (req.query.format === 'plain'){
-        res.setHeader('Content-Type', 'text/plain')
-        res.write((rv.toBn() / 10 ** 10).toString());
-        res.end();
-    }else{
-        res.send({
-            result: (rv.toBn() / 10 ** 10)
-        })
-    }
-    next()
+async function getTotalIssuance(req: any, res: any, next: any) {
+  if (typeof API === 'undefined') {
+    next();
+    return;
+  }
+  let rv = await API.query.balances.totalIssuance();
+  if (req.query.format === 'plain') {
+    res.setHeader('Content-Type', 'text/plain');
+    res.write((rv.toBn() / 10 ** 10).toString());
+    res.end();
+  } else {
+    res.send({
+      result: rv.toBn() / 10 ** 10,
+    });
+  }
+  next();
 }
-
 
 server.get('/account/:addr/transfers', getAccountTransfers);
 server.get('/account/:addr/staking_txs', getAccountStakingTxs);

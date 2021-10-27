@@ -74,13 +74,17 @@ async function updateCertificate(ctx: Context, certificateId: string, extrs: any
   }
 
   console.log('Processing cert:', certificate.toHuman());
-  await ctx.db
-    .collection('certificates')
-    .updateOne(
-      { _id: certificateId },
-      { $set: { ...certificate.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs) } },
-      { upsert: true }
-    );
+  await ctx.db.collection('certificates').updateOne(
+    { _id: certificateId },
+    {
+      $set: {
+        ...certificate.toJSON(),
+        created_at_block: ctx.currentBlockNumber,
+        ts: getTimestampFromExtrinsics(extrs),
+      },
+    },
+    { upsert: true }
+  );
 }
 
 async function updateProductTrackingStatus(ctx: Context, trackingId: string, eventIdx: number, _extrs: any[]) {
@@ -99,11 +103,7 @@ async function updateProductTrackingStatus(ctx: Context, trackingId: string, eve
   const tracking = _tracking.toJSON();
   await ctx.db
     .collection(cols.PRODUCT_TRACKING)
-    .updateOne(
-      { _id: trackingId },
-      { $set: { status: tracking.status, updated: tracking.updated } },
-      { upsert: true }
-    );
+    .updateOne({ _id: trackingId }, { $set: { status: tracking.status, updated: tracking.updated } }, { upsert: true });
   await ctx.db
     .collection(cols.PRODUCT_TRACKING_EVENT)
     .updateOne(
@@ -156,13 +156,18 @@ async function updateOrganization(ctx: Context, orgId: string, extrs: any[]) {
   console.log('Processing org:', org.toHuman());
   const members = await (ctx.api.query as any).organization.members(orgId);
 
-  await ctx.db
-    .collection('organizations')
-    .updateOne(
-      { _id: orgId },
-      { $set: { ...org.toJSON(), created_at_block: ctx.currentBlockNumber, ts: getTimestampFromExtrinsics(extrs), members: members.toJSON() } },
-      { upsert: true }
-    );
+  await ctx.db.collection('organizations').updateOne(
+    { _id: orgId },
+    {
+      $set: {
+        ...org.toJSON(),
+        created_at_block: ctx.currentBlockNumber,
+        ts: getTimestampFromExtrinsics(extrs),
+        members: members.toJSON(),
+      },
+    },
+    { upsert: true }
+  );
 }
 
 function getTimestampFromExtrinsics(extrs: any[]) {
@@ -176,7 +181,7 @@ function updateTransfer(ctx: Context, src: string, dst: string, amount: number, 
   const timestamp = getTimestampFromExtrinsics(extrs);
   const nonce = extrs[1]?.nonce.toNumber();
   if (nonce != null && nonce != undefined) {
-    console.log(src, dst, amount, timestamp, nonce);
+    console.log('TRANSFER:', src, dst, amount, timestamp, nonce);
 
     const query = {
       src: src,
@@ -190,7 +195,7 @@ function updateTransfer(ctx: Context, src: string, dst: string, amount: number, 
           src: src,
           nonce: nonce,
           block: ctx.currentBlockNumber,
-          extrinsic_index: "1",
+          extrinsic_index: '1',
           dst: dst,
           amount: `${amount}`,
           ts: timestamp,
@@ -259,7 +264,7 @@ async function updateStats(ctx: Context) {
   const { api, db } = ctx;
 
   const nodes = (await api.rpc.system.health()).peers.toNumber();
-  const runtimeVersion = (api.consts.system.version).specVersion.toNumber();
+  const runtimeVersion = api.consts.system.version.specVersion.toNumber();
   const era = (await api.query.staking.currentEra()).unwrap().toNumber();
   const session = (await api.query.session.currentIndex()).toNumber();
   const validators = (await api.query.session.validators()).map((a) => a.toHuman());
@@ -272,7 +277,7 @@ async function updateStats(ctx: Context) {
         session,
         validators,
         runtimeVersion,
-        nodes
+        nodes,
       },
     },
     { upsert: true }

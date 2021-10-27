@@ -20,54 +20,59 @@ import { Context, processBlock, updateStats } from '@arascan/components';
 
 require('dotenv').config();
 
+const dbName = process.env.MONGODB_DB_NAME;
+
+if (!dbName) {
+  console.log('[ERROR] no MONGODB_DB_NAME env var');
+  throw Error('db name not set');
+}
+
 async function main() {
-    const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-    const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944'
-    const api = await Nuchain.connectApi({provider: new WsProvider(WS_SOCKET_URL)});
+  const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+  const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944';
+  const api = await Nuchain.connectApi({ provider: new WsProvider(WS_SOCKET_URL) });
 
-    // const api = await ApiPromise.create({
-    //     // provider: new WsProvider(WS_SOCKET_URL),
-    //     types: {
-    //         Address: 'MultiAddress',
-    //         LookupSource: 'MultiAddress'
-    //     }
-    // });
+  // const api = await ApiPromise.create({
+  //     // provider: new WsProvider(WS_SOCKET_URL),
+  //     types: {
+  //         Address: 'MultiAddress',
+  //         LookupSource: 'MultiAddress'
+  //     }
+  // });
 
-    const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
-        MongoClient.connect(dbUri, async (err, client: MongoClient) => {
-            if (err == null) {
-                const db = client.db("nuchain");
+  const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
+    MongoClient.connect(dbUri, async (err, client: MongoClient) => {
+      if (err == null) {
+        const db = client.db(dbName);
 
-                console.log(`Imported block #${header.number}`);
+        console.log(`Imported block #${header.number}`);
 
-                const ctx = new Context(api, db, client);
+        const ctx = new Context(api, db, client);
 
-                await processBlock(ctx, header.hash, false)
-                    .then(() => updateStats(ctx))
+        await processBlock(ctx, header.hash, false).then(() => updateStats(ctx));
 
-                client.close();
-            }
-        });
+        client.close();
+      }
     });
+  });
 
-    process.on('SIGINT', (_code) => {
-        console.log("quiting...");
-        unsub();
-        process.exit(0);
-    });
+  process.on('SIGINT', (_code) => {
+    console.log('quiting...');
+    unsub();
+    process.exit(0);
+  });
 }
 
 // function testBlock(){
 // // for debugging
 // MongoClient.connect(dbUri, async (err, client: MongoClient) => {
 //     if (err == null) {
-//         const db = client.db("nuchain");
+//         const db = client.db(dbName);
 //         let ctx = new Context(api, db, client);
 //         let blockHash = (await api.rpc.chain.getBlockHash(53871));
 //         await processBlock(ctx, blockHash);
 //     }
 // });
 // }
-
 
 main().catch(console.error);
