@@ -15,7 +15,7 @@ Available parameters:
 --no-skip-limiter     - disable skip limit.
 --all                 - process all blocks.
 --continue            - continue sequencing from last processed block
-                        this useful when something wrong happened in the middle sequencing.
+                        this useful when something went wrong in the middle of sequencing.
 ```
 
 Example, to run sequencer from block 100 until block 0:
