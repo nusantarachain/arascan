@@ -149,7 +149,7 @@ async function main() {
       }
 
       if (startingBlock == null) {
-        console.log('Unknown starting block');
+        console.log('Unknown starting block', startingBlock);
         return;
       }
 
