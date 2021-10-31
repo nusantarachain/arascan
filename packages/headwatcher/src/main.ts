@@ -32,14 +32,6 @@ async function main() {
   const WS_SOCKET_URL = process.env.NUCHAIN_WS_SOCKET_URL || 'ws://127.0.0.1:9944';
   const api = await Nuchain.connectApi({ provider: new WsProvider(WS_SOCKET_URL) });
 
-  // const api = await ApiPromise.create({
-  //     // provider: new WsProvider(WS_SOCKET_URL),
-  //     types: {
-  //         Address: 'MultiAddress',
-  //         LookupSource: 'MultiAddress'
-  //     }
-  // });
-
   const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
     MongoClient.connect(dbUri, async (err, client: MongoClient) => {
       if (err == null) {

@@ -49,7 +49,8 @@ async function startSequencing(
   blockHash: any,
   untilBlockNum: number,
   counter: Counter,
-  done: () => void
+  done: () => void,
+  onError: () => void
 ) {
   const { api } = ctx;
 
@@ -65,32 +66,37 @@ async function startSequencing(
   } = block;
   const blockNumber = number.toNumber();
 
-  await processBlock(ctx, hash, true, (skipped) => {
-    if (skipped) {
-      counter.incSkipped();
-    } else {
-      counter.incProceed();
-
-      // save latest processed block, to resume when something went wrong during sequencing.
-      ctx.db
-        .collection('processed')
-        .updateOne({ _id: 'last_block' }, { $set: { value: block.toJSON() } }, { upsert: true });
-    }
-    if (
-      (blockNumber > 2 && blockNumber > untilBlockNum && counter.skipped < MAX_SKIP_BLOCKS) ||
-      noSkipLimit ||
-      seqAll
-    ) {
-      setTimeout(async () => await startSequencing(ctx, parentHash, untilBlockNum, counter, done), 10);
-    } else {
-      if (counter.skipped >= MAX_SKIP_BLOCKS) {
-        console.log(`Sequencing stopped by max skip blocks ${MAX_SKIP_BLOCKS}, total ${counter.proceed} proceed.`);
-      } else {
-        console.log(`Sequencing finished, ${counter.proceed} proceed, ${counter.skipped} skipped.`);
-      }
-      done();
-    }
-  });
+  try {
+    await processBlock(ctx, hash, true, (skipped) => {
+        if (skipped) {
+          counter.incSkipped();
+        } else {
+          counter.incProceed();
+    
+          // save latest processed block, to resume when something went wrong during sequencing.
+          ctx.db
+            .collection('processed')
+            .updateOne({ _id: 'last_block' }, { $set: { value: block.toJSON() } }, { upsert: true });
+        }
+        if (
+          (blockNumber > 2 && blockNumber > untilBlockNum && counter.skipped < MAX_SKIP_BLOCKS) ||
+          noSkipLimit ||
+          seqAll
+        ) {
+          setTimeout(async () => await startSequencing(ctx, parentHash, untilBlockNum, counter, done, onError), 10);
+        } else {
+          if (counter.skipped >= MAX_SKIP_BLOCKS) {
+            console.log(`Sequencing stopped by max skip blocks ${MAX_SKIP_BLOCKS}, total ${counter.proceed} proceed.`);
+          } else {
+            console.log(`Sequencing finished, ${counter.proceed} proceed, ${counter.skipped} skipped.`);
+          }
+          done();
+        }
+      });
+  }catch (error) {
+      console.log("[ERROR]", error)
+      onError()
+  }
 }
 
 function ensureIndex(db: any) {
@@ -186,6 +192,8 @@ async function main() {
 
         client.close();
         process.exit(0);
+      }, ()=> {
+          
       });
 
       process.on('SIGINT', (_code) => {

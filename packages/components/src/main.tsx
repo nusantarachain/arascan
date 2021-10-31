@@ -242,6 +242,7 @@ async function processBlock(
   Promise.all(
     allEvents.map(async ({ event }) => {
       let key = `${event.section}.${event.method}`;
+      key = key.replace(/\.\*$/,'') // remove ending .* if any
       let processed = false;
       if (eventHandler[key]) {
         await eventHandler[key](ctx, block, event, extrinsics);
