@@ -101,8 +101,12 @@ async function startSequencing(
 
 function ensureIndex(db: any) {
   const colBlocks = db.collection('blocks');
-  colBlocks.createIndex({ block_num: -1 }, { unique: true });
-  colBlocks.createIndex({ block_hash: -1 }, { unique: true });
+  try {
+    colBlocks.createIndex({ block_num: -1 }, { unique: true });
+    colBlocks.createIndex({ block_hash: -1 }, { unique: true });
+  }catch (err) {
+      console.log("[ERROR] Index error.", err)
+  }
 }
 
 async function main() {
