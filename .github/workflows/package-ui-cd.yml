@@ -20,7 +20,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           source: "packages/ui"
-          target: "~/arascan/src/packages/ui"
+          target: "~/arascan/src"
 
       - name: build packages/ui
         uses: appleboy/ssh-action@master
@@ -29,5 +29,4 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          source: "packages/ui"
           script: "cd /var/www/html && ls -l"
