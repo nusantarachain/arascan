@@ -10,5 +10,6 @@ Probably nothing.
 ### Changed
   
 - Trial and Error deployment script :D
+  Change deploy command
  
 ### Fixed

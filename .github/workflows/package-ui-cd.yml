@@ -29,4 +29,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          script: "cd /var/www/html && ls -l"
+          script: |
+            cd ~/arascan/src/
+            yarn workspace @arascan/ui generate
+            yarn workspace @arascan/ui build
