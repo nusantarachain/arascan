@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import { WsProvider } from '@polkadot/api';
-import { Nuchain } from '@arascan/components';
 //import type { Hash } from '@polkadot/types/interfaces';
 import { MongoClient } from 'mongodb';
-import { Context, getLastStartingBlock, processBlock } from '@arascan/components';
+import { Nuchain, Context, getLastStartingBlock, processBlockFast } from '@arascan/components';
 
 require('dotenv').config();
 
@@ -49,6 +48,7 @@ async function startSequencing(
   blockHash: any,
   untilBlockNum: number,
   counter: Counter,
+  cols: { colBlocks: any; colEvents: any },
   done: () => void,
   onError: (error: any, _blockNumber: number) => void
 ) {
@@ -67,7 +67,7 @@ async function startSequencing(
   const blockNumber = number.toNumber();
 
   try {
-    await processBlock(ctx, hash, true, (skipped) => {
+    await processBlockFast(ctx, hash, true, cols, (skipped) => {
       if (skipped) {
         counter.incSkipped();
       } else {
@@ -83,7 +83,7 @@ async function startSequencing(
         noSkipLimit ||
         seqAll
       ) {
-        setTimeout(async () => await startSequencing(ctx, parentHash, untilBlockNum, counter, done, onError), 10);
+        setTimeout(async () => await startSequencing(ctx, parentHash, untilBlockNum, counter, cols, done, onError), 10);
       } else {
         if (counter.skipped >= MAX_SKIP_BLOCKS) {
           console.log(`Sequencing stopped by max skip blocks ${MAX_SKIP_BLOCKS}, total ${counter.proceed} proceed.`);
@@ -91,6 +91,21 @@ async function startSequencing(
           console.log(`Sequencing finished, ${counter.proceed} proceed, ${counter.skipped} skipped.`);
         }
         done();
+      }
+
+      // flush per 1000 records
+      if (counter.proceed % 1000 === 0) {
+          const { colBlocks, colEvents } = cols;
+          colBlocks.execute((err, _result) => {
+              if (err) {
+                  console.log("BULK ERROR (blocks):", err);
+              }
+          })
+          colEvents.execute((err, _result) => {
+              if (err) {
+                  console.log("BULK ERROR (events):", err);
+              }
+          })
       }
     });
   } catch (error) {
@@ -147,7 +162,7 @@ async function main() {
   const opts = {
     reconnectTries: 30,
     reconnectInterval: 1000,
-    bufferMaxEntries: 0
+    bufferMaxEntries: 0,
   };
 
   MongoClient.connect(dbUri, opts, async (err, client: MongoClient) => {
@@ -187,11 +202,17 @@ async function main() {
 
       const counter = new Counter(0);
 
+      const cols = {
+        colBlocks: db.collection('blocks').initializeUnorderedBulkOp(),
+        colEvents: db.collection('events').initializeUnorderedBulkOp(),
+      };
+
       await startSequencing(
         ctx,
         startingBlock.hash,
         untilBlock,
         counter,
+        cols,
         () => {
           console.log('Setting last processed block');
 

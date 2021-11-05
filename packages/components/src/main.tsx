@@ -179,7 +179,6 @@ async function processBlock(
   // process events
   const allEvents = await api.query.system.events.at(hash);
 
-  // const colTrf = db.collection('transfers');
   const colBlocks = db.collection('blocks');
   const colEvents = db.collection('events');
 
@@ -243,7 +242,7 @@ async function processBlock(
   await Promise.all(
     allEvents.map(async ({ event }) => {
       let key = `${event.section}.${event.method}`;
-      key = key.replace(/\.\*$/,'') // remove ending .* if any
+      key = key.replace(/\.\*$/, ''); // remove ending .* if any
       let processed = false;
       if (eventHandler[key]) {
         await eventHandler[key](ctx, block, event, extrinsics);
@@ -277,6 +276,140 @@ async function processBlock(
   callback(false);
 }
 
+async function processBlockFast(
+  ctx: Context,
+  blockHash: Hash,
+  verbose = false,
+  cols: { colBlocks: any; colEvents: any },
+  callback: (skipped: boolean) => void = () => ({})
+) {
+  const { api } = ctx;
+
+  const signedBlock = await api.rpc.chain.getBlock(blockHash);
+  const {
+    block: {
+      header: { parentHash, number, hash },
+      extrinsics,
+    },
+  } = signedBlock;
+  const block = signedBlock.block;
+  const blockNumber = number.toNumber();
+
+  ctx.currentBlock = block;
+  ctx.currentBlockNumber = blockNumber;
+
+  if (verbose) {
+    process.stdout.write(`[${number}] ${hash.toHex()}\r`);
+    // console.log(`[${number}] ${hash.toHex()}`)
+  }
+
+  let blockTs: any;
+  block.extrinsics.forEach((extr) => {
+    let method = 'unknown';
+    let section = 'unknown';
+
+    try {
+      const mCall = ctx.api.registry.findMetaCall(extr.callIndex);
+      if (mCall != null) {
+        method = mCall.method;
+        section = mCall.section;
+      }
+    } catch (e) {
+      console.log(`[ERROR] ${e}`);
+    }
+    section = section.toString();
+
+    if (section == 'timestamp') {
+      if (method == 'set') {
+        blockTs = extr.method.args[0];
+      }
+    }
+  });
+
+  // process events
+  const allEvents = await api.query.system.events.at(hash);
+
+  //   const colBlocks = db.collection('blocks');
+  //   const colEvents = db.collection('events');
+  const { colBlocks, colEvents } = cols;
+
+  // check is already exists
+  const exists = await colBlocks.findOne({ block_num: blockNumber });
+
+  if (exists != null) {
+    console.log(`\nBlock [${blockNumber}] exists, ignored.`);
+    callback(true);
+    return;
+  }
+
+  // console.log(`${allEvents}`);
+
+  await Promise.all(
+    extrinsics.map(async (_extr, extrIdx) => {
+      allEvents
+        .filter(
+          ({ phase, event }) =>
+            phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(extrIdx) && event.method != 'ExtrinsicSuccess'
+        )
+        .map(async ({ event }, eventIdx) => {
+          await eventProcessorClass[event.section]?.(
+            ctx,
+            event.method,
+            event,
+            eventIdx,
+            block,
+            blockTs?.toNumber(),
+            extrIdx
+          );
+
+          // save event information
+          const dataJson = event.data.toJSON();
+          const dataHash = crc32(dataJson);
+          await colEvents.insert({
+            block: blockNumber,
+            extrinsic_index: extrIdx,
+            section: event.section,
+            method: event.method,
+            data_hash: dataHash,
+            ts: blockTs?.toNumber(),
+            data: dataJson,
+          });
+        });
+    })
+  );
+
+  // proses events yang tidak terkait dengan extrinsic lainnya
+  await Promise.all(
+    allEvents.map(async ({ event }) => {
+      let key = `${event.section}.${event.method}`;
+      key = key.replace(/\.\*$/, ''); // remove ending .* if any
+      let processed = false;
+      if (eventHandler[key]) {
+        await eventHandler[key](ctx, block, event, extrinsics);
+        processed = true;
+      }
+      if (!processed && key != 'system.ExtrinsicSuccess') {
+        console.log(`event not handled: ${key}`);
+      }
+    })
+  );
+
+  try {
+    // finally add the block into the db
+    await colBlocks.insert({
+      block_num: blockNumber,
+      block_hash: hash.toHex(),
+      block_parent_hash: parentHash.toHex(),
+      event_counts: allEvents.length,
+      extrinsics: JSON.parse(`${extrinsics}`),
+    });
+  } catch (error) {
+    console.log(`[ERROR] updating blocks data error ${error}`);
+  }
+
+  callback(false);
+}
+
 /**
  * Get last starting block when sequencing.
  */
@@ -289,6 +422,7 @@ import { updateAccount, updateStats } from './event_handler';
 
 export {
   processBlock,
+  processBlockFast,
   updateAccount,
   toHex,
   toNumber,
