@@ -150,6 +150,7 @@ async function processBlock(
 
   if (verbose) {
     process.stdout.write(`[${number}] ${hash.toHex()}\r`);
+    // console.log(`[${number}] ${hash.toHex()}`)
   }
 
   let blockTs: any;
@@ -239,7 +240,7 @@ async function processBlock(
   );
 
   // proses events yang tidak terkait dengan extrinsic lainnya
-  Promise.all(
+  await Promise.all(
     allEvents.map(async ({ event }) => {
       let key = `${event.section}.${event.method}`;
       key = key.replace(/\.\*$/,'') // remove ending .* if any

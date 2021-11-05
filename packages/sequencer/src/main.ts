@@ -50,7 +50,7 @@ async function startSequencing(
   untilBlockNum: number,
   counter: Counter,
   done: () => void,
-  onError: () => void
+  onError: (error: any, _blockNumber: number) => void
 ) {
   const { api } = ctx;
 
@@ -68,44 +68,45 @@ async function startSequencing(
 
   try {
     await processBlock(ctx, hash, true, (skipped) => {
-        if (skipped) {
-          counter.incSkipped();
+      if (skipped) {
+        counter.incSkipped();
+      } else {
+        counter.incProceed();
+
+        // save latest processed block, to resume when something went wrong during sequencing.
+        ctx.db
+          .collection('processed')
+          .updateOne({ _id: 'last_block' }, { $set: { value: block.toJSON() } }, { upsert: true });
+      }
+      if (
+        (blockNumber > 2 && blockNumber > untilBlockNum && counter.skipped < MAX_SKIP_BLOCKS) ||
+        noSkipLimit ||
+        seqAll
+      ) {
+        setTimeout(async () => await startSequencing(ctx, parentHash, untilBlockNum, counter, done, onError), 10);
+      } else {
+        if (counter.skipped >= MAX_SKIP_BLOCKS) {
+          console.log(`Sequencing stopped by max skip blocks ${MAX_SKIP_BLOCKS}, total ${counter.proceed} proceed.`);
         } else {
-          counter.incProceed();
-    
-          // save latest processed block, to resume when something went wrong during sequencing.
-          ctx.db
-            .collection('processed')
-            .updateOne({ _id: 'last_block' }, { $set: { value: block.toJSON() } }, { upsert: true });
+          console.log(`Sequencing finished, ${counter.proceed} proceed, ${counter.skipped} skipped.`);
         }
-        if (
-          (blockNumber > 2 && blockNumber > untilBlockNum && counter.skipped < MAX_SKIP_BLOCKS) ||
-          noSkipLimit ||
-          seqAll
-        ) {
-          setTimeout(async () => await startSequencing(ctx, parentHash, untilBlockNum, counter, done, onError), 10);
-        } else {
-          if (counter.skipped >= MAX_SKIP_BLOCKS) {
-            console.log(`Sequencing stopped by max skip blocks ${MAX_SKIP_BLOCKS}, total ${counter.proceed} proceed.`);
-          } else {
-            console.log(`Sequencing finished, ${counter.proceed} proceed, ${counter.skipped} skipped.`);
-          }
-          done();
-        }
-      });
-  }catch (error) {
-      console.log("[ERROR]", error)
-      onError()
+        done();
+      }
+    });
+  } catch (error) {
+    console.log('[ERROR]', error);
+    onError(error, blockNumber);
   }
 }
 
 function ensureIndex(db: any) {
+  console.log('Ensure Indices...');
   const colBlocks = db.collection('blocks');
   try {
     colBlocks.createIndex({ block_num: -1 }, { unique: true });
     colBlocks.createIndex({ block_hash: -1 }, { unique: true });
-  }catch (err) {
-      console.log("[ERROR] Index error.", err)
+  } catch (err) {
+    console.log('[ERROR] Index error.', err);
   }
 }
 
@@ -143,7 +144,13 @@ async function main() {
     startingBlock = await api.rpc.chain.getHeader(startingBlockHash);
   }
 
-  MongoClient.connect(dbUri, async (err, client: MongoClient) => {
+  const opts = {
+    reconnectTries: 30,
+    reconnectInterval: 1000,
+    bufferMaxEntries: 0
+  };
+
+  MongoClient.connect(dbUri, opts, async (err, client: MongoClient) => {
     if (err) {
       console.log(`Cannot connect to Mongodb. ${err}`);
       return;
@@ -180,25 +187,33 @@ async function main() {
 
       const counter = new Counter(0);
 
-      await startSequencing(ctx, startingBlock.hash, untilBlock, counter, () => {
-        console.log('Setting last processed block');
+      await startSequencing(
+        ctx,
+        startingBlock.hash,
+        untilBlock,
+        counter,
+        () => {
+          console.log('Setting last processed block');
 
-        const data = startingBlock.toJSON();
-        data['hash'] = startingBlockHash.toHex() as any;
+          const data = startingBlock.toJSON();
+          data['hash'] = startingBlockHash.toHex() as any;
 
-        db.collection('processed').updateOne(
-          { _id: 'last_starting_block' },
-          { $set: { value: data } },
-          { upsert: true }
-        );
+          db.collection('processed').updateOne(
+            { _id: 'last_starting_block' },
+            { $set: { value: data } },
+            { upsert: true }
+          );
 
-        console.log('Done.');
+          console.log('Done.');
 
-        client.close();
-        process.exit(0);
-      }, ()=> {
-          
-      });
+          client.close();
+          process.exit(0);
+        },
+        (error, blockNumber) => {
+          console.log('Sequencing stoped with error:', error, 'at block', blockNumber);
+          client.close();
+        }
+      );
 
       process.on('SIGINT', (_code) => {
         console.log('quiting...');
