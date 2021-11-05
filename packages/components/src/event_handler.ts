@@ -18,7 +18,12 @@ const eventHandler: any = {
   'balances.Transfer': async (ctx: Context, _block: Block, event: any, extrs: any[]) => {
     const accountId1 = event.data[0].toHuman();
     const accountId2 = event.data[1].toHuman();
-    updateTransfer(ctx, accountId1, accountId2, event.data[2].toNumber(), extrs);
+    try {
+        updateTransfer(ctx, accountId1, accountId2, event.data[2].toNumber(), extrs);
+    }catch (err) {
+        console.error("ERROR:", err);
+        console.log("event dump:", event);
+    }
     await updateAccount(ctx, accountId1);
     await updateAccount(ctx, accountId2);
   },
@@ -177,7 +182,7 @@ function getTimestampFromExtrinsics(extrs: any[]) {
     .pop();
 }
 
-function updateTransfer(ctx: Context, src: string, dst: string, amount: number, extrs: any[]) {
+function updateTransfer(ctx: Context, src: string, dst: string, amount: string, extrs: any[]) {
   const timestamp = getTimestampFromExtrinsics(extrs);
   const nonce = extrs[1]?.nonce.toNumber();
   if (nonce != null && nonce != undefined) {
@@ -197,7 +202,7 @@ function updateTransfer(ctx: Context, src: string, dst: string, amount: number, 
           block: ctx.currentBlockNumber,
           extrinsic_index: '1',
           dst: dst,
-          amount: `${amount}`,
+          amount,
           ts: timestamp,
         },
       },
