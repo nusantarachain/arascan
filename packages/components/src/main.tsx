@@ -149,8 +149,8 @@ async function processBlock(
   ctx.currentBlockNumber = blockNumber;
 
   if (verbose) {
-    process.stdout.write(`[${number}] ${hash.toHex()}\r`);
-    // console.log(`[${number}] ${hash.toHex()}`)
+    // process.stdout.write(`[${number}] ${hash.toHex()}\r`);
+    console.log(`[${number}] ${hash.toHex()}`)
   }
 
   let blockTs: any;

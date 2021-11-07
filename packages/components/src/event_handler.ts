@@ -19,7 +19,7 @@ const eventHandler: any = {
     const accountId1 = event.data[0].toHuman();
     const accountId2 = event.data[1].toHuman();
     try {
-        updateTransfer(ctx, accountId1, accountId2, event.data[2].toNumber(), extrs);
+        updateTransfer(ctx, accountId1, accountId2, event.data[2], extrs);
     }catch (err) {
         console.error("ERROR:", err);
         console.log("event dump:", event);
@@ -186,7 +186,7 @@ function updateTransfer(ctx: Context, src: string, dst: string, amount: string, 
   const timestamp = getTimestampFromExtrinsics(extrs);
   const nonce = extrs[1]?.nonce.toNumber();
   if (nonce != null && nonce != undefined) {
-    console.log('TRANSFER:', src, dst, amount, timestamp, nonce);
+    console.log('TRANSFER:', src, dst, `${amount}`, timestamp, nonce);
 
     const query = {
       src: src,
@@ -202,7 +202,7 @@ function updateTransfer(ctx: Context, src: string, dst: string, amount: string, 
           block: ctx.currentBlockNumber,
           extrinsic_index: '1',
           dst: dst,
-          amount,
+          amount: `${amount}`,
           ts: timestamp,
         },
       },

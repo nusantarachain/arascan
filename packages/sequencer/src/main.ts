@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import { WsProvider } from '@polkadot/api';
-//import type { Hash } from '@polkadot/types/interfaces';
 import { MongoClient } from 'mongodb';
-import { Nuchain, Context, getLastStartingBlock, processBlockFast } from '@arascan/components';
+import { Nuchain, Context, getLastStartingBlock, processBlock } from '@arascan/components';
 
 require('dotenv').config();
 
@@ -67,7 +66,7 @@ async function startSequencing(
   const blockNumber = number.toNumber();
 
   try {
-    await processBlockFast(ctx, hash, true, cols, (skipped) => {
+    await processBlock(ctx, hash, true, (skipped) => {
       if (skipped) {
         counter.incSkipped();
       } else {
@@ -91,21 +90,6 @@ async function startSequencing(
           console.log(`Sequencing finished, ${counter.proceed} proceed, ${counter.skipped} skipped.`);
         }
         done();
-      }
-
-      // flush per 1000 records
-      if (counter.proceed % 1000 === 0) {
-          const { colBlocks, colEvents } = cols;
-          colBlocks.execute((err, _result) => {
-              if (err) {
-                  console.log("BULK ERROR (blocks):", err);
-              }
-          })
-          colEvents.execute((err, _result) => {
-              if (err) {
-                  console.log("BULK ERROR (events):", err);
-              }
-          })
       }
     });
   } catch (error) {
