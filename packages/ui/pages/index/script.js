@@ -1,4 +1,5 @@
 import moment from 'moment';
+import io from "socket.io-client";
 
 import Dashboard from '~/layouts/dashboard/index.vue';
 import WidgedBlock from '~/components/WidgetBlock/index.vue';
@@ -108,7 +109,9 @@ const created = function () {
 };
 
 const mounted = function () {
-  this.$ws.socket.on('new_block', (message) => {
+  const socket = io(this.$config.baseUrl, { path: '/socket' });
+
+  socket.on('new_block', (message) => {
     message = JSON.parse(message);
     this.blocks = [
       {
@@ -126,16 +129,16 @@ const mounted = function () {
     ];
   });
 
-  this.$ws.socket.on('summary_block', (message) => {
+  socket.on('summary_block', (message) => {
     message = JSON.parse(message);
     if (message) {
       message.data.blocks.forEach((block) => {
         this.latestBlocks.unshift({
           id: Math.random().toString(36).substring(2, 7),
-          title: `#${block._id}`,
+          title: `#${block.block_num}`,
           extrinsil: `${block.extrinsics.length} Extrinsics`,
           event: `${block.event_counts} Events`,
-          link: `/blocks/${block._id}`,
+          link: `/blocks/${block.block_num}`,
           time: moment(block.extrinsics[0].method.args.now).fromNow(),
         });
       });
@@ -144,7 +147,7 @@ const mounted = function () {
     }
   });
 
-  this.$ws.socket.on('summary_event', (message) => {
+  socket.on('summary_event', (message) => {
     message = JSON.parse(message);
     if (message) {
       message.data.events.forEach((event) => {
@@ -161,7 +164,7 @@ const mounted = function () {
     }
   });
 
-  this.$ws.socket.on('stats', (message) => {
+  socket.on('stats', (message) => {
     message = JSON.parse(message);
     const statData = message.data;
     this.overviews = [
@@ -240,11 +243,11 @@ const methods = {
       .then((response) => {
         const blocks = response.data.entries;
         this.latestBlocks = blocks.map((x) => ({
-          id: `#${x._id}`,
-          title: `#${x._id}`,
+          id: `#${x.block_num}`,
+          title: `#${x.block_num}`,
           extrinsil: `${x.extrinsics.length} Extrinsics`,
           event: `${x.event_counts} Events`,
-          link: `/blocks/${x._id}`,
+          link: `/blocks/${x.block_num}`,
           time: moment(x.extrinsics[0].method.args.now).fromNow(),
         }));
       })
