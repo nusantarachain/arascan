@@ -1,0 +1,36 @@
+name: package-ui-cd
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'packages/ui/**'
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: copy packages/ui
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "packages/ui"
+          target: "~/arascan/src"
+
+      - name: build packages/ui
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ~/arascan/src/
+            yarn install
+            yarn workspace @arascan/ui generate
+            yarn workspace @arascan/ui build

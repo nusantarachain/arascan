@@ -1,0 +1,56 @@
+name: package-services-cd
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'packages/api/**'
+      - 'packages/components/**'
+      - 'packages/headwatcher/**'
+      - 'packages/sequencer/**'
+
+jobs:
+  cd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: copy packages/api
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "packages/api"
+          target: "~/arascan/src"
+      
+      - name: copy packages/components
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "packages/components"
+          target: "~/arascan/src"
+
+      - name: copy packages/headwatcher
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "packages/headwatcher"
+          target: "~/arascan/src"
+
+      - name: copy packages/sequencer
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "packages/sequencer"
+          target: "~/arascan/src"

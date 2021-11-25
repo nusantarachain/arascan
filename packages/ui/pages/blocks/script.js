@@ -1,4 +1,5 @@
 import moment from 'moment';
+import io from "socket.io-client";
 
 import Dashboard from '~/layouts/dashboard/index.vue';
 import Icon from '~/components/Icon/index.vue';
@@ -29,7 +30,9 @@ const created = function () {
 };
 
 const mounted = function () {
-  this.$ws.socket.on('new_block', (message) => {
+  const socket = io(this.$config.baseUrl, { path: '/socket' });
+
+  socket.on('new_block', (message) => {
     message = JSON.parse(message);
     this.blocks = this.blocks.map((x) => ({
       _id: x._id,
@@ -49,11 +52,11 @@ const methods = {
       .then((response) => {
         const blocks = response.data.entries;
         this.blocks = blocks.map((x) => ({
-          _id: x._id,
-          id: `#${x._id}`,
+          _id: x.block_num,
+          id: `#${x.block_num}`,
           event_counts: x.event_counts,
           ext_counts: x.extrinsics.length,
-          link: `/blocks/${x._id}`,
+          link: `/blocks/${x.block_num}`,
           status: '-',
           time: moment(x.extrinsics[0].method.args.now).fromNow(),
         }));

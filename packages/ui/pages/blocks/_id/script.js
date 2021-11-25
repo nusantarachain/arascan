@@ -1,5 +1,7 @@
 import { Nuchain, WsProvider } from 'nuchain-api';
 import moment from 'moment';
+import io from "socket.io-client";
+import { isHex } from '@polkadot/util'
 
 import Dashboard from '~/layouts/dashboard/index.vue';
 import Icon from '~/components/Icon/index.vue';
@@ -47,7 +49,9 @@ const mounted = function () {
   this.fetchBlock(this.$route.params.id);
   this.fetchDetail(this.$route.params.id);
 
-  this.$ws.socket.on('new_block', (message) => {
+  const socket = io(this.$config.baseUrl, { path: '/socket' });
+
+  socket.on('new_block', (message) => {
     message = JSON.parse(message);
     this.isFinalized = message.data.finalized.number >= this.block.number && this.block.number > 0;
     this.block.status = this.isFinalized ? 'Finalized' : 'Unfinalized';
@@ -60,12 +64,12 @@ const methods = {
       .then((response) => {
         const block = response.data.result;
         this.block = {
-          number: block._id,
+          number: block.block_num,
           timestamp: new Date(block.extrinsics[0].method.args.now).toUTCString(),
           status: 'Unfinalized',
           hash: block.block_hash,
           parent_hash: block.block_parent_hash,
-          parent_hash_link: `/blocks/${block._id - 1}`,
+          parent_hash_link: `/blocks/${block.block_num - 1}`,
           validator: '-',
           blocktime: moment(block.extrinsics[0].method.args.now).fromNow(),
         };
@@ -77,51 +81,55 @@ const methods = {
 
   fetchDetail(block) {
     Nuchain.connectApi({ provider: new WsProvider(this.$config.nuchainSocketUrl) })
-      .then((api) => {
-        api.rpc.chain.getBlockHash(block).then((blockHash) => {
-          api.rpc.chain.getBlock(blockHash).then((signedBlock) => {
-            let countindex = 0;
-            let extrinsics = [];
-            signedBlock.block.extrinsics.forEach((ex, index) => {
-              const {
-                method: { args, method, section },
-              } = ex;
-              console.log(`${section}.${method}(${args.map((a) => a.toString()).join(', ')})`);
-              if (section != 'timestamp' && section != 'authorship') {
-                countindex = countindex + 1;
-                extrinsics.push({
-                  id: `${block}-${index}`,
-                  hash: '-',
-                  time: '',
-                  result: true,
-                  action: `${section}(${method})`,
-                  content: this.extrinsicsContent(section, method, args),
-                  expand: false,
-                });
-              }
+      .then(async (api) => {
+        let blockHash;
+
+        if(!isHex(block)) {
+          blockHash = await api.rpc.chain.getBlockHash(block);
+        } else {
+          blockHash = block;
+        }
+
+        let signedBlock = await api.rpc.chain.getBlock(blockHash);
+
+        let countindex = 0;
+        let extrinsics = [];
+        signedBlock.block.extrinsics.forEach((ex, index) => {
+          const {
+            method: { args, method, section },
+          } = ex;
+          console.log(`${section}.${method}(${args.map((a) => a.toString()).join(', ')})`);
+          if (section != 'timestamp' && section != 'authorship') {
+            countindex = countindex + 1;
+            extrinsics.push({
+              id: `${block}-${index}`,
+              hash: '-',
+              time: '',
+              result: true,
+              action: `${section}(${method})`,
+              content: this.extrinsicsContent(section, method, args),
+              expand: false,
             });
-
-            this.extrinsics = extrinsics;
-            this.tabs = [
-              {
-                title: 'Extrinsics',
-                count: countindex,
-              },
-              {
-                title: 'Comments',
-                count: 0,
-              },
-            ];
-          });
-
-          api.derive.chain.getHeader(blockHash).then((header) => {
-            this.block.validator = header.author;
-            this.isAvailable = true;
-          });
+          }
         });
-      })
-      .catch((e) => {
-        console.log(e);
+
+        this.extrinsics = extrinsics;
+        this.tabs = [
+          {
+            title: 'Extrinsics',
+            count: countindex,
+          },
+          {
+            title: 'Comments',
+            count: 0,
+          },
+        ];
+
+        api.derive.chain.getHeader(blockHash).then((header) => {
+          this.block.validator = header.author;
+          this.isAvailable = true;
+        });
+        
       });
   },
 
