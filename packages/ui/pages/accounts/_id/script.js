@@ -59,42 +59,77 @@ const methods = {
       });
   },
 
-  fetchActivities(addr) {
-    return ApiService.getTransfers(addr, { limit: 50 })
-      .then((response) => {
-          const activities = response.data.entries;
-          let countindex = 1;
-          let extrinsics = [];
-          activities.forEach((act, index) => {
-            countindex = index + 1;
-            extrinsics.push({
-              id: `${act.block}-${act.extrinsic_index}`,
-              hash: '-',
-              time: moment(act.ts).fromNow(),
-              result: true,
-              action: 'balances(transfer)',
-              from: act.src,
-              to: act.dst,
-              amount: `${act.amount / 10000000000} ARA`,
-              expand: false
-            });
-          });
+  async fetchActivities(addr) {
+    let transfers = await ApiService.getTransfers(addr, { limit: 10 });
+    let rewards = await ApiService.getAccountStakingTxs(addr, { limit: 10 });
+    let slashes = await ApiService.getAccountRewardSlashes(addr, { limit: 10 });
 
-          this.extrinsics = extrinsics;
-          this.tabs = [
-            {
-              title: 'Activities',
-              count: countindex
-            },
-            {
-              title: 'Comments',
-              count: 0
-            }
-          ];
-      })
-      .catch((e) => {
-          console.log(e);
+    let countindex = 0;
+    let extrinsics = [];
+    transfers.data.entries.forEach((act) => {
+      countindex = countindex + 1;
+      extrinsics.push({
+        id: `${act.block}-${act.extrinsic_index}`,
+        hash: '-',
+        time: moment(act.ts).fromNow(),
+        result: true,
+        action: 'Balance Transfer',
+        from: act.src,
+        to: act.dst,
+        amount: `${act.amount / 10000000000} ARA`,
+        expand: false,
+        ts: act.ts
       });
+    });
+
+    if (rewards.data.data !== undefined) {
+      rewards.data.data.entries.forEach((act) => {
+        countindex = countindex + 1;
+        extrinsics.push({
+          id: `${act.extrinsic_index}`,
+          hash: '-',
+          time: moment(act.block_timestamp).fromNow(),
+          result: true,
+          action: 'Staking Rewards',
+          from: act.src,
+          to: act.dst,
+          amount: `${act.amount / 10000000000} ARA`,
+          expand: false,
+          ts: act.block_timestamp
+        });
+      });
+    }
+    
+
+    if (slashes.data.data !== undefined) {
+      slashes.data.data.entries.forEach((act) => {
+        countindex = countindex + 1;
+        extrinsics.push({
+          id: `${act.extrinsic_index}`,
+          hash: '-',
+          time: moment(act.block_timestamp).fromNow(),
+          result: true,
+          action: 'Reward Slashes',
+          from: act.src,
+          to: act.dst,
+          amount: `${act.amount / 10000000000} ARA`,
+          expand: false,
+          ts: act.block_timestamp
+        });
+      });
+    }
+    
+    this.extrinsics = extrinsics.sort((a, b) => (a.ts < b.ts) ? 1 : ((b.ts < a.ts) ? -1 : 0));
+    this.tabs = [
+      {
+        title: 'Activities',
+        count: countindex
+      },
+      {
+        title: 'Comments',
+        count: 0
+      }
+    ];
   },
 
   copyToClipboard() {

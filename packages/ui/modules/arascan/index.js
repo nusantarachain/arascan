@@ -53,11 +53,11 @@ class ApiService {
     }
 
     getAccountStakingTxs(addr) {
-        return this.apiClient.get(`/account/${addr}/transfers`);
+        return this.apiClient.get(`/account/${addr}/staking_txs`);
     }
 
     getAccountRewardSlashes(addr) {
-        return this.apiClient.get(`/account/${addr}/transfers`);
+        return this.apiClient.get(`/account/${addr}/rewards_slashes`);
     }
 
     getBlocks(params) {
