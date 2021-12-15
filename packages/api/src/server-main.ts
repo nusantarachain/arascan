@@ -206,7 +206,7 @@ function getBlockOne(req: any, res: any, next: any) {
   withDb((db, _client) => {
     return db
       .collection('blocks')
-      .findOne({ $or: [{ _id: blockNumOrHash }, { block_hash: blockNumOrHash }] })
+      .findOne({ $or: [{ block_num: blockNumOrHash }, { block_hash: blockNumOrHash }] })
       .then((result: any) => {
         res.send({ result });
       });
