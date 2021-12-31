@@ -97,6 +97,8 @@ function processStakingEvent(
       },
       { upsert: true }
     );
+
+    updateAccount(ctx, event.data[0].toHuman());
   }
 }
 

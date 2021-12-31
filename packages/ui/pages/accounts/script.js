@@ -1,48 +1,48 @@
-import Dashboard from '~/layouts/dashboard/index.vue'
-import Icon from '~/components/Icon/index.vue'
-import Input from '~/components/Input/index.vue'
-import Identicon from '~/components/Identicon/index.vue'
-import ApiService from "~/modules/arascan";
+import Dashboard from '~/layouts/dashboard/index.vue';
+import Icon from '~/components/Icon/index.vue';
+import Input from '~/components/Input/index.vue';
+import Identicon from '~/components/Identicon/index.vue';
+import ApiService from '~/modules/arascan';
 
 Object.assign(String.prototype, {
   shorty() {
-      return this.slice(0, 5) + '...' + this.slice(-5);
-  }
+    return this.slice(0, 5) + '...' + this.slice(-5);
+  },
 });
 
 const components = {
   Dashboard,
   AIcon: Icon,
   AInput: Input,
-  Identicon
-}
+  Identicon,
+};
 
-const data = function() {
+const data = function () {
   return {
     accounts: [],
-    search: ''
-  }
-}
+    search: '',
+  };
+};
 
-const created = function() {
+const created = function () {
   ApiService.setBaseUrl(this.$config.apiUrl);
   this.fetchAccounts();
-}
+};
 
 const methods = {
   fetchAccounts() {
     return ApiService.getAccounts({ limit: 10 })
       .then((response) => {
         const accounts = response.data.entries;
-        this.accounts = accounts.map(x => ({
-            name: x.identity != undefined ? x.identity.display : x._id,
-            balance: x.balance.free / 10000000000,
-            address: x._id,
-            link: `/accounts/${x._id}`
+        this.accounts = accounts.map((x) => ({
+          name: x.identity != undefined ? x.identity.display : x._id,
+          balance: x.balance.free / 10000000000,
+          address: x._id,
+          link: `/accounts/${x._id}`,
         }));
       })
       .catch((e) => {
-          console.log(e);
+        console.log(e);
       });
   },
 
@@ -55,24 +55,23 @@ const methods = {
       return ApiService.getAccounts({ search: this.search, limit: 10 })
         .then((response) => {
           const accounts = response.data.entries;
-          this.accounts = accounts.map(x => ({
-              name: x.identity != undefined ? x.identity.display : x._id,
-              balance: x.balance.free,
-              address: x._id,
-              link: `/accounts/${x._id}`
+          this.accounts = accounts.map((x) => ({
+            name: x.identity != undefined ? x.identity.display : x._id,
+            balance: x.balance.free / 10000000000,
+            address: x._id,
+            link: `/accounts/${x._id}`,
           }));
         })
         .catch((e) => {
-            console.log(e);
+          console.log(e);
         });
     }
-  }
-
-}
+  },
+};
 
 export default {
   components,
   data,
   created,
-  methods
-}
+  methods,
+};
