@@ -1,5 +1,5 @@
 <template lang="pug">
-    NuxtLink.link(:to="link") {{ orgId }}
+    NuxtLink.link(:to="`/organizations/${orgId}`") {{ orgId }}
 </template>
 
 
@@ -7,11 +7,6 @@
 export default {
     props: {
         'orgId': {type: String, required: true}
-    },
-    data(){
-        return {
-            link: `${this.$config.baseUrl}/${this.orgId}`
-        }
     }
 }
 </script>
