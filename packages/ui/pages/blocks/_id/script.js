@@ -1,7 +1,7 @@
 import { Nuchain, WsProvider } from 'nuchain-api';
 import moment from 'moment';
-import io from "socket.io-client";
-import { isHex } from '@polkadot/util'
+import io from 'socket.io-client';
+import { isHex } from '@polkadot/util';
 
 import Dashboard from '~/layouts/dashboard/index.vue';
 import Icon from '~/components/Icon/index.vue';
@@ -80,57 +80,55 @@ const methods = {
   },
 
   fetchDetail(block) {
-    Nuchain.connectApi({ provider: new WsProvider(this.$config.nuchainSocketUrl) })
-      .then(async (api) => {
-        let blockHash;
+    Nuchain.connectApi({ provider: new WsProvider(this.$config.nuchainSocketUrl) }).then(async (api) => {
+      let blockHash;
 
-        if(!isHex(block)) {
-          blockHash = await api.rpc.chain.getBlockHash(block);
-        } else {
-          blockHash = block;
+      if (!isHex(block)) {
+        blockHash = await api.rpc.chain.getBlockHash(block);
+      } else {
+        blockHash = block;
+      }
+
+      let signedBlock = await api.rpc.chain.getBlock(blockHash);
+
+      let countindex = 0;
+      let extrinsics = [];
+      signedBlock.block.extrinsics.forEach((ex, index) => {
+        const {
+          method: { args, method, section },
+        } = ex;
+        console.log(`${section}.${method}(${args.map((a) => a.toString()).join(', ')})`);
+        if (section != 'timestamp' && section != 'authorship') {
+          countindex = countindex + 1;
+          extrinsics.push({
+            id: `${block}-${index}`,
+            hash: '-',
+            time: '',
+            result: true,
+            action: `${section}(${method})`,
+            content: this.extrinsicsContent(section, method, args),
+            expand: false,
+          });
         }
-
-        let signedBlock = await api.rpc.chain.getBlock(blockHash);
-
-        let countindex = 0;
-        let extrinsics = [];
-        signedBlock.block.extrinsics.forEach((ex, index) => {
-          const {
-            method: { args, method, section },
-          } = ex;
-          console.log(`${section}.${method}(${args.map((a) => a.toString()).join(', ')})`);
-          if (section != 'timestamp' && section != 'authorship') {
-            countindex = countindex + 1;
-            extrinsics.push({
-              id: `${block}-${index}`,
-              hash: '-',
-              time: '',
-              result: true,
-              action: `${section}(${method})`,
-              content: this.extrinsicsContent(section, method, args),
-              expand: false,
-            });
-          }
-        });
-
-        this.extrinsics = extrinsics;
-        this.tabs = [
-          {
-            title: 'Extrinsics',
-            count: countindex,
-          },
-          {
-            title: 'Comments',
-            count: 0,
-          },
-        ];
-
-        api.derive.chain.getHeader(blockHash).then((header) => {
-          this.block.validator = header.author;
-          this.isAvailable = true;
-        });
-        
       });
+
+      this.extrinsics = extrinsics;
+      this.tabs = [
+        {
+          title: 'Extrinsics',
+          count: countindex,
+        },
+        {
+          title: 'Comments',
+          count: 0,
+        },
+      ];
+
+      api.derive.chain.getHeader(blockHash).then((header) => {
+        this.block.validator = header.author;
+        this.isAvailable = true;
+      });
+    });
   },
 
   extrinsicsContent(section, method, args) {
@@ -181,6 +179,17 @@ const methods = {
       case 'identity':
         if (method === 'setIdentity') {
           return [{ key: 'Display', value: args[0].toJSON().display.raw }];
+        }
+        break;
+      case 'certificate':
+        if (method === 'issue') {
+          return [
+            { key: 'OrgId', value: args[0].toJSON() },
+            { key: 'CertId', value: args[1].toHuman() },
+            { key: 'HumanId', value: args[2].toHuman() },
+            { key: 'Recipient', value: args[3].toHuman() },
+            { key: 'Props', value: args[4].toHuman() },
+          ];
         }
         break;
       default:

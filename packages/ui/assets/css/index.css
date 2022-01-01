@@ -1,1 +1,6 @@
 @import "./partials/commons.css";
+
+a.link:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
