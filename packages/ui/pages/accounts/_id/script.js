@@ -119,6 +119,7 @@ const methods = {
     }
 
     this.extrinsics = extrinsics.sort((a, b) => (a.ts < b.ts ? 1 : b.ts < a.ts ? -1 : 0));
+
     this.tabs = [
       {
         title: 'Activities',
