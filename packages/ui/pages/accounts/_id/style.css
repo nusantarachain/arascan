@@ -25,6 +25,7 @@
     @apply flex;
     @apply items-center;
     font-size: 22px;
+    font-family: Consolas, monaco, monospace;
     line-height: 33px;
   }
 

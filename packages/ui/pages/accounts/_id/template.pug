@@ -58,14 +58,14 @@ Dashboard
                   AIcon.collapsible__icon(v-else, type="chevron-up-circle", alt="", @click.native="ext.expand = false")
               .trow.trow--collapsible(v-if="ext.expand", :class="{'trow--colored': index % 2}")
                 .tcol.collapsible__content
-                  .row(v-if="ext.action == 'Balance Transfer'")
+                  .row(v-if="ext.action == 'Balance Transfer' || ext.action == 'Transfer'")
                     .col--title From
                     .col--content : 
-                      a(:href="'/accounts/' + ext.from") {{ ext.from }}
-                  .row(v-if="ext.action == 'Balance Transfer'")
+                      LinkAccount(:id="ext.from")
+                  .row(v-if="ext.action == 'Balance Transfer' || ext.action == 'Transfer'")
                     .col--title To
                     .col--content : 
-                      a(:href="'/accounts/' + ext.to") {{ ext.to }}
+                      LinkAccount(:id="ext.to")
                   .row
                     .col--title Amount
                     .col--content : {{ ext.amount }}
