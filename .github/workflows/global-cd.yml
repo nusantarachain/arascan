@@ -3,7 +3,7 @@ name: global-cd
 on:
   push:
     branches:
-      - develop
+      - master
     paths-ignore:
       - 'packages/**'
 
@@ -19,8 +19,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          source: "."
-          target: "~/arascan/src"
+          source: '.'
+          target: '~/arascan/src'
 
       - name: install dependencies
         uses: appleboy/ssh-action@master
@@ -31,4 +31,3 @@ jobs:
           port: 22
           script: |
             cd ~/arascan/src/
-            yarn install
