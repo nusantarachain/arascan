@@ -9,9 +9,9 @@ import Tabs from '~/components/Tabs/index.vue';
 import Identicon from '~/components/Identicon/index.vue';
 import ApiService from '~/modules/arascan';
 
-const DEBUG = process.env.NODE_ENV == "development";
+const DEBUG = process.env.NODE_ENV == 'development';
 
-const _log = (msg, ...args) => DEBUG ? console.log(msg, ...args) : {};
+const _log = (msg, ...args) => (DEBUG ? console.log(msg, ...args) : {});
 
 const components = {
   Dashboard,
@@ -55,19 +55,22 @@ const mounted = function () {
 
   const socket = io(this.$config.socketUrl, { path: '/socket' });
 
+  var disqusLoaded = false;
+
   socket.on('new_block', (message) => {
-    console.log("🚀 ~ file: script.js ~ line 59 ~ socket.on ~ message", message)
+    console.log('🚀 ~ file: script.js ~ line 59 ~ socket.on ~ message', message);
     message = JSON.parse(message);
     this.isFinalized = message.data.finalized.number >= this.block.number && this.block.number > 0;
     this.block.status = this.isFinalized ? 'Finalized' : 'Unfinalized';
 
-    setTimeout(()=>{
-      this.initializeDisqus();
-    }, 1000)
+    if (!disqusLoaded) {
+      setTimeout(() => {
+        this.initializeDisqus();
+        disqusLoaded = true;
+      }, 1000);
+    }
   });
-
 };
-
 
 const methods = {
   fetchBlock(block) {
@@ -90,21 +93,23 @@ const methods = {
       });
   },
 
-  initializeDisqus(){
+  initializeDisqus() {
     // ---- begin the Disqus stuff ---------------
-      const baseUrl = this.$config.baseUrl;
-      const blockNumber = this.block.number
-      window.disqus_config = function () {
-        this.page.url = `${baseUrl}/blocks/${ blockNumber }`;
-        this.page.identifier = blockNumber;
-      };
-    
-      (function() { // DON'T EDIT BELOW THIS LINE
-      var d = document, s = d.createElement('script');
+    const baseUrl = this.$config.baseUrl;
+    const blockNumber = this.block.number;
+    window.disqus_config = function () {
+      this.page.url = `${baseUrl}/blocks/${blockNumber}`;
+      this.page.identifier = blockNumber;
+    };
+
+    (function () {
+      // DON'T EDIT BELOW THIS LINE
+      var d = document,
+        s = d.createElement('script');
       s.src = 'https://arascan.disqus.com/embed.js';
       s.setAttribute('data-timestamp', +new Date());
       (d.head || d.body).appendChild(s);
-      })();
+    })();
     // ---- eof Disqus stuff --------------------
   },
 
@@ -122,12 +127,12 @@ const methods = {
 
       let countindex = 0;
       let extrinsics = [];
-      _log("signedBlock.block:", signedBlock.toHuman())
+      _log('signedBlock.block:', signedBlock.toHuman());
       signedBlock.block.extrinsics.forEach((ex, index) => {
         const {
           method: { args, method, section },
         } = ex;
-        _log("extrinsic: ", ex.toHuman());
+        _log('extrinsic: ', ex.toHuman());
         _log(`${section}.${method}(${args.map((a) => a.toString()).join(', ')})`);
         if (section != 'timestamp' && section != 'authorship') {
           countindex = countindex + 1;
