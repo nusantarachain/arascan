@@ -1,6 +1,7 @@
 {
   "name": "@arascan/ui",
   "version": "1.0.0",
+  "author": "Nusantara Chain <admin@nuchain.network>",
   "private": true,
   "scripts": {
     "dev": "nuxt",
