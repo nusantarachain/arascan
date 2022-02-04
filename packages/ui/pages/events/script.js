@@ -34,6 +34,7 @@ const methods = {
     return ApiService.getEvents({ limit: 50 })
       .then((response) => {
           const events = response.data.entries;
+          console.log("🚀 ~ file: script.js ~ line 37 ~ .then ~ events", events)
           this.events = events.map(x => ({
               block: `#${x.block}`,
               event: `${x.section}.${x.method}`,

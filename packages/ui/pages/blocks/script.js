@@ -30,7 +30,7 @@ const created = function () {
 };
 
 const mounted = function () {
-  const socket = io(this.$config.baseUrl, { path: '/socket' });
+  const socket = io(this.$config.apiUrl, { path: '/socket' });
 
   socket.on('new_block', (message) => {
     message = JSON.parse(message);

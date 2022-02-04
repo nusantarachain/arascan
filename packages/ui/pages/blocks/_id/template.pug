@@ -69,22 +69,15 @@ Dashboard
                   .row(v-for="(extContent, extIndex) in ext.content", :key="extIndex")
                     .col--title  {{ extContent.key }}
                     .col--content(v-if="extContent.key === 'OrgId'")
-                        LinkOrg(:orgId="extContent.value")
+                      LinkOrg(:orgId="extContent.value")
+                    .col--content(v-else-if="extContent.type === 'account'")
+                      LinkAccount(:id="extContent.value")
+                    .col--content(v-else-if="extContent.type === 'currency'")
+                      Currency(:value="extContent.value")
                     .col--content(v-else) {{ extContent.value }}
             .tactions.trow.trow--colored
         .comments(v-show="currentTab === 2")
-          div.p-8(id="disqus_thread")
-            script.
-              var disqus_config = function () {
-                this.page.url = "{{ $config.baseUrl }}/blocks/{{ block.number }}";
-                this.page.identifier = {{ block.number }};
-              };
-          
-              (function() { // DON'T EDIT BELOW THIS LINE
-              var d = document, s = d.createElement('script');
-              s.src = 'https://arascan.disqus.com/embed.js';
-              s.setAttribute('data-timestamp', +new Date());
-              (d.head || d.body).appendChild(s);
-              })();
-            noscript
-              | Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+          client-only
+            div.p-8(id="disqus_thread")
+              noscript
+                | Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>

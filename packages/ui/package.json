@@ -21,8 +21,6 @@
     "moment": "^2.29.1",
     "nuchain-api": "0.1.1",
     "nuxt": "^2.15.7",
-    "pug": "^3.0.2",
-    "pug-plain-loader": "^1.1.0",
     "socket.io-client": "^4.3.2",
     "vue-chartjs": "^3.5.1",
     "vue-svgicon": "^3.2.9"
@@ -37,7 +35,9 @@
     "eslint-plugin-nuxt": "^2.0.0",
     "eslint-plugin-vue": "^7.12.1",
     "postcss": "^8.3.5",
-    "prettier": "^2.3.2"
+    "prettier": "^2.3.2",
+    "pug": "^3.0.2",
+    "pug-plain-loader": "^1.1.0"
   },
   "license": "Apache-2.0",
   "repository": "https://github.com/nusantarachain/arascan",

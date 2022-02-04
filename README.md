@@ -38,3 +38,24 @@ yarn start:api-server
 ```
 
 Make sure the database already running and ready to accept connections.
+
+
+## Web UI
+
+To start Web UI server run the following command:
+
+```bash
+yarn start:web-ui
+```
+
+## Sync with production database
+
+Sometimes we need to debug using production database, we can download from backup and restore to local database,
+for this purpose we can use the following command:
+
+```bash
+# backup and download database from remote
+$ ./etc/script/get_latest_backup_db.sh
+# restore to local database
+$ ./etc/script/sync_latest_backup_db.sh
+```
