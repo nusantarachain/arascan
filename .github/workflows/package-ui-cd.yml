@@ -30,4 +30,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            cd ~/arascan/src/
+            cd ~/arascan; ./build_and_restart_arascan_ui.sh
