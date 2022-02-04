@@ -53,14 +53,17 @@ const mounted = function () {
   this.fetchBlock(this.$route.params.id);
   this.fetchDetail(this.$route.params.id);
 
-  const socket = io(this.$config.apiUrl, { path: '/socket' });
+  const socket = io(this.$config.socketUrl, { path: '/socket' });
 
   socket.on('new_block', (message) => {
+    console.log("🚀 ~ file: script.js ~ line 59 ~ socket.on ~ message", message)
     message = JSON.parse(message);
     this.isFinalized = message.data.finalized.number >= this.block.number && this.block.number > 0;
     this.block.status = this.isFinalized ? 'Finalized' : 'Unfinalized';
 
-    this.initializeDisqus();
+    setTimeout(()=>{
+      this.initializeDisqus();
+    }, 1000)
   });
 
 };
@@ -74,7 +77,7 @@ const methods = {
         this.block = {
           number: block.block_num,
           timestamp: new Date(block.extrinsics[0].method.args.now).toUTCString(),
-          status: 'Unfinalized',
+          status: '-',
           hash: block.block_hash,
           parent_hash: block.block_parent_hash,
           parent_hash_link: `/blocks/${block.block_num - 1}`,

@@ -109,7 +109,7 @@ const created = function () {
 };
 
 const mounted = function () {
-  const socket = io(this.$config.apiUrl, { path: '/socket' });
+  const socket = io(this.$config.socketUrl, { path: '/socket' });
 
   socket.on('new_block', (message) => {
     message = JSON.parse(message);
