@@ -30,4 +30,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            cd ~/arascan; ./build_and_restart_arascan_ui.sh
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            cd ~/arascan
+            ./build_and_restart_arascan_ui.sh
