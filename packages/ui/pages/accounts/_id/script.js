@@ -33,6 +33,9 @@ const data = function () {
       },
     ],
     extrinsics: [],
+    balanceTotal: '-',
+    balanceFree: '-',
+    balanceLocked: '-',
   };
 };
 
@@ -53,6 +56,15 @@ const methods = {
           identity: account.identity,
         };
         this.isAvailable = true;
+
+        const free = this.$util.normalizeNum(account.balance.free);
+        const reserved = this.$util.normalizeNum(account.balance.reserved);
+        const miscFrozen = this.$util.normalizeNum(account.balance.miscFrozen);
+        const feeFrozen = this.$util.normalizeNum(account.balance.feeFrozen);
+
+        this.balanceTotal = this.$util.formatCurrency(free + reserved + miscFrozen + feeFrozen);
+        this.balanceFree = this.$util.formatCurrency(free);
+        this.balanceLocked = this.$util.formatCurrency(reserved + miscFrozen + feeFrozen);
       })
       .catch((e) => {
         console.log(e);
@@ -76,7 +88,7 @@ const methods = {
         action: 'Transfer',
         from: act.src,
         to: act.dst,
-        amount: `${act.amount / 10000000000} ARA`,
+        amount: `${this.$util.formatCurrency(act.amount)} ARA`,
         expand: false,
         ts: act.ts,
       });
@@ -93,7 +105,7 @@ const methods = {
           action: act.event_id,
           from: act.src,
           to: act.dst,
-          amount: `${act.amount / 10000000000} ARA`,
+          amount: `${this.$util.formatCurrency(act.amount)} ARA`,
           expand: false,
           ts: act.block_timestamp,
         });
@@ -111,7 +123,7 @@ const methods = {
           action: act.event_id,
           from: act.src,
           to: act.dst,
-          amount: `${act.amount / 10000000000} ARA`,
+          amount: `${this.$util.formatCurrency(act.amount)} ARA`,
           expand: false,
           ts: act.block_timestamp,
         });

@@ -16,12 +16,12 @@ Dashboard
                 .tooltip Copied!
                 AIcon.tail-icon.arascan-icon--gray(id="icon-clipboard", type="clipboard", alt="", @click.native="copyToClipboard")
             p.account-detail__id
-              | Balance: {{ ((account.balance.free + account.balance.reserved + account.balance.miscFrozen + account.balance.feeFrozen) / 10000000000).toFixed(4) }} ARA
+              | Balance: {{ balanceTotal }} ARA
               span.has-tooltip
                 .tooltip-balance
-                  span Free: {{ (account.balance.free / 10000000000).toFixed(4) }} ARA
+                  span Free: {{ balanceFree }} ARA
                   br
-                  span Locked: {{ ((account.balance.reserved + account.balance.miscFrozen + account.balance.feeFrozen) / 10000000000).toFixed(4) }} ARA
+                  span Locked: {{ balanceLocked }} ARA
                 AIcon.tail-icon.arascan-icon--gray(type="box", alt="")
       .block-detail
         .block-detail__title On-Chain Identity
